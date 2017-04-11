@@ -1,0 +1,67 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Net;
+
+using Hazel;
+using Hazel.Tcp;
+
+namespace HazelTestServer
+{
+		public class ServerExample
+	{
+		static ConnectionListener listener;
+
+		public static void Main(string[] args)
+		{
+			NetworkEndPoint endPoint = new NetworkEndPoint(IPAddress.Any, 4296);
+
+			listener = new TcpConnectionListener(endPoint);
+
+			listener.NewConnection += NewConnectionHandler;
+
+			Console.WriteLine("Starting server!");
+
+			listener.Start();
+
+			Console.WriteLine("Press any key to continue...");
+
+			Console.ReadKey();
+
+			listener.Close();
+		}
+
+		static void NewConnectionHandler(object sender, NewConnectionEventArgs args)
+		{
+			Console.WriteLine("New connection from " + args.Connection.EndPoint.ToString());
+
+			args.Connection.DataReceived += DataReceivedHandler;
+
+			args.Connection.Disconnected += ClientDisconnectHandler;
+
+			args.Recycle();
+		}
+
+		private static void DataReceivedHandler(object sender, DataReceivedEventArgs args)
+		{
+			Connection connection = (Connection)sender;
+
+			Console.WriteLine("Received (" + string.Join<byte>(", ", args.Bytes) + ") from " + connection.EndPoint.ToString());
+
+			connection.SendBytes(args.Bytes, args.SendOption);
+
+			args.Recycle();
+		}
+
+		private static void ClientDisconnectHandler(object sender, DisconnectedEventArgs args)
+		{
+			Connection connection = (Connection)sender;
+
+			Console.WriteLine("Connection from " + connection.EndPoint + " lost");
+
+			args.Recycle();
+		}
+	}
+}
