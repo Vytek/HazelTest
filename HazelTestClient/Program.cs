@@ -22,17 +22,28 @@ namespace HazelTestClient
 			connection.DataReceived += DataReceived;
 			connection.Disconnected += ServerDisconnectHandler;
 
-			Console.WriteLine("Connecting!");
+			try
+			{
+				Console.WriteLine("Connecting!");
 
-			connection.Connect();
+				connection.Connect();
 
-			connection.SendBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+				connection.SendBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 
-			Console.WriteLine("Press any key to continue...");
+				Console.WriteLine("Press any key to continue...");
 
-			Console.ReadKey();
+				Console.ReadKey();
 
-			connection.Close();
+				connection.Close();
+
+				 Environment.Exit(0);
+			}
+			catch(Hazel.HazelException ex)
+			{
+				Console.Error.WriteLine("Error: " + ex.Message + " from " + ex.Source);
+				connection.Close();
+				Environment.Exit(1);
+			}
 		}
 
 		private static void DataReceived(object sender, DataReceivedEventArgs args)

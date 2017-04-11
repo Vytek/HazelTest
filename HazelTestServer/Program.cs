@@ -24,6 +24,8 @@ namespace HazelTestServer
 
 			Console.WriteLine("Starting server!");
 
+			Console.WriteLine("Server listening on "+(listener as TcpConnectionListener).EndPoint);
+
 			listener.Start();
 
 			Console.WriteLine("Press any key to continue...");
@@ -31,6 +33,8 @@ namespace HazelTestServer
 			Console.ReadKey();
 
 			listener.Close();
+
+			Environment.Exit(0);
 		}
 
 		static void NewConnectionHandler(object sender, NewConnectionEventArgs args)
