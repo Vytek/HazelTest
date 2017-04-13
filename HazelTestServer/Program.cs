@@ -10,7 +10,7 @@ using Hazel.Tcp;
 
 namespace HazelTestServer
 {
-		public class ServerExample
+	public class ServerExample
 	{
 		static ConnectionListener listener;
 
