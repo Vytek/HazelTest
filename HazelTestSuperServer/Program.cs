@@ -40,9 +40,14 @@ namespace HazelTestSuperServer
 					//Connection to List
 					clients.Add(args.Connection);
 	            };
+
+
 		  	}
 
 			//Close all
+			listener.Close();
+
+			Environment.Exit(0);
 		}
 
 		public void Shutdown()
