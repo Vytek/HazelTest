@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Hazel;
 using Hazel.Tcp;
 
-namespace HazelTestClient
+namespace HazelTestSuperClient
 {
 	class ClientExample
 	{
@@ -22,6 +22,8 @@ namespace HazelTestClient
 			connection.DataReceived += DataReceived;
 			connection.Disconnected += ServerDisconnectHandler;
 
+			ConsoleKeyInfo cki;
+
 			try
 			{
 				Console.WriteLine("Connecting!");
@@ -30,16 +32,21 @@ namespace HazelTestClient
 
 				connection.SendBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 
-				Console.WriteLine("Press any key to continue...");
-
-				Console.ReadKey();
-				//https://msdn.microsoft.com/it-it/library/471w8d85(v=vs.110).aspx?cs-save-lang=1&cs-lang=cpp#code-snippet-3
+				do 
+		      	{
+					cki = Console.ReadKey();
+					if (cki.Key == ConsoleKey.S)
+					{
+						Console.WriteLine();
+						connection.SendBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+					}
+		       	} while (cki.Key != ConsoleKey.Escape);
 
 				connection.Close();
 
 				Environment.Exit(0);
 			}
-			catch(Hazel.HazelException ex)
+			catch (Hazel.HazelException ex)
 			{
 				Console.Error.WriteLine("Error: " + ex.Message + " from " + ex.Source);
 				connection.Close();
@@ -62,7 +69,7 @@ namespace HazelTestClient
 
 			connection = null;
 
-			args.Recycle();   
-		}
+			args.Recycle();
+		}	
 	}
 }

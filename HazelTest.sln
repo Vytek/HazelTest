@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HazelTestServer", "HazelTes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HazelTestSuperServer", "HazelTestSuperServer\HazelTestSuperServer.csproj", "{CA3A8115-7333-439C-AB6C-8D2A314517AF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HazelTestSuperClient", "HazelTestSuperClient\HazelTestSuperClient.csproj", "{701D8B7A-D660-4893-8E11-318F68A907CA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -25,5 +27,9 @@ Global
 		{CA3A8115-7333-439C-AB6C-8D2A314517AF}.Debug|x86.Build.0 = Debug|x86
 		{CA3A8115-7333-439C-AB6C-8D2A314517AF}.Release|x86.ActiveCfg = Release|x86
 		{CA3A8115-7333-439C-AB6C-8D2A314517AF}.Release|x86.Build.0 = Release|x86
+		{701D8B7A-D660-4893-8E11-318F68A907CA}.Debug|x86.ActiveCfg = Debug|x86
+		{701D8B7A-D660-4893-8E11-318F68A907CA}.Debug|x86.Build.0 = Debug|x86
+		{701D8B7A-D660-4893-8E11-318F68A907CA}.Release|x86.ActiveCfg = Release|x86
+		{701D8B7A-D660-4893-8E11-318F68A907CA}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 EndGlobal
