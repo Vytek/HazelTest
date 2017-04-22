@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HazelTestSuperServer", "Haz
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HazelTestSuperClient", "HazelTestSuperClient\HazelTestSuperClient.csproj", "{701D8B7A-D660-4893-8E11-318F68A907CA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HazelUDPTestClient", "HazelUDPTestClient\HazelUDPTestClient.csproj", "{7ADFC41C-89B8-4520-9335-4EE97AF4E89D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HazelUDPTestServer", "HazelUDPTestServer\HazelUDPTestServer.csproj", "{0E90FFF4-077F-4BF4-AD5C-078C915654B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -31,5 +35,13 @@ Global
 		{701D8B7A-D660-4893-8E11-318F68A907CA}.Debug|x86.Build.0 = Debug|x86
 		{701D8B7A-D660-4893-8E11-318F68A907CA}.Release|x86.ActiveCfg = Release|x86
 		{701D8B7A-D660-4893-8E11-318F68A907CA}.Release|x86.Build.0 = Release|x86
+		{7ADFC41C-89B8-4520-9335-4EE97AF4E89D}.Debug|x86.ActiveCfg = Debug|x86
+		{7ADFC41C-89B8-4520-9335-4EE97AF4E89D}.Debug|x86.Build.0 = Debug|x86
+		{7ADFC41C-89B8-4520-9335-4EE97AF4E89D}.Release|x86.ActiveCfg = Release|x86
+		{7ADFC41C-89B8-4520-9335-4EE97AF4E89D}.Release|x86.Build.0 = Release|x86
+		{0E90FFF4-077F-4BF4-AD5C-078C915654B0}.Debug|x86.ActiveCfg = Debug|x86
+		{0E90FFF4-077F-4BF4-AD5C-078C915654B0}.Debug|x86.Build.0 = Debug|x86
+		{0E90FFF4-077F-4BF4-AD5C-078C915654B0}.Release|x86.ActiveCfg = Release|x86
+		{0E90FFF4-077F-4BF4-AD5C-078C915654B0}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 EndGlobal
