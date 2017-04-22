@@ -39,6 +39,7 @@ namespace HazelTestSuperClient
 					{
 						Console.WriteLine();
 						connection.SendBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+						//http://johnatten.com/2014/09/07/c-building-a-useful-extensible-net-console-application-template-for-development-and-testing/
 					}
 		       	} while (cki.Key != ConsoleKey.Escape);
 
