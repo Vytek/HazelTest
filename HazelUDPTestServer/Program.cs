@@ -1,4 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Net;
+
+using Hazel;
+using Hazel.Udp;
 
 namespace HazelUDPTestServer
 {
@@ -10,13 +18,13 @@ namespace HazelUDPTestServer
 		{
 			NetworkEndPoint endPoint = new NetworkEndPoint(IPAddress.Any, 4296);
 
-			listener = new TcpConnectionListener(endPoint);
+			listener = new UdpConnectionListener(endPoint);
 
 			listener.NewConnection += NewConnectionHandler;
 
 			Console.WriteLine("Starting server!");
 
-			Console.WriteLine("Server listening on " + (listener as TcpConnectionListener).EndPoint);
+			Console.WriteLine("Server listening on " + (listener as UdpConnectionListener).EndPoint);
 
 			listener.Start();
 

@@ -30,7 +30,7 @@ namespace HazelUDPTestClient
 
 				connection.Connect();
 
-				connection.SendBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+				connection.SendBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, SendOption.Reliable);
 
 				Console.WriteLine("Press any key to continue...");
 
