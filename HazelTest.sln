@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HazelUDPTestClient", "Hazel
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HazelUDPTestServer", "HazelUDPTestServer\HazelUDPTestServer.csproj", "{0E90FFF4-077F-4BF4-AD5C-078C915654B0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HazelUDPTestSuperServer", "HazelUDPTestSuperServer\HazelUDPTestSuperServer.csproj", "{6E2D1F72-724C-437E-BED5-A5E3F23D8239}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -43,5 +45,9 @@ Global
 		{0E90FFF4-077F-4BF4-AD5C-078C915654B0}.Debug|x86.Build.0 = Debug|x86
 		{0E90FFF4-077F-4BF4-AD5C-078C915654B0}.Release|x86.ActiveCfg = Release|x86
 		{0E90FFF4-077F-4BF4-AD5C-078C915654B0}.Release|x86.Build.0 = Release|x86
+		{6E2D1F72-724C-437E-BED5-A5E3F23D8239}.Debug|x86.ActiveCfg = Debug|x86
+		{6E2D1F72-724C-437E-BED5-A5E3F23D8239}.Debug|x86.Build.0 = Debug|x86
+		{6E2D1F72-724C-437E-BED5-A5E3F23D8239}.Release|x86.ActiveCfg = Release|x86
+		{6E2D1F72-724C-437E-BED5-A5E3F23D8239}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 EndGlobal

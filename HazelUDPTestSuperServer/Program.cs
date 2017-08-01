@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Net;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 
 using Hazel;
-using Hazel.Tcp;
+using Hazel.Udp;
 
-namespace HazelTestSuperServer
+namespace HazelUDPTestSuperServer
 {
 	public class Server
 	{
@@ -26,18 +23,18 @@ namespace HazelTestSuperServer
 		public void Start()
 		{
 			NetworkEndPoint endPoint = new NetworkEndPoint(IPAddress.Any, portNumber);
-			ConnectionListener listener = new TcpConnectionListener(endPoint);
+			ConnectionListener listener = new UdpConnectionListener(endPoint);
 
 			Running = true;
 
 			Console.WriteLine("Starting server!");
-			Console.WriteLine("Server listening on "+(listener as TcpConnectionListener).EndPoint);
+			Console.WriteLine("Server listening on " + (listener as UdpConnectionListener).EndPoint);
 
 			listener.NewConnection += NewConnectionHandler;
 			listener.Start();
 
 			while (Running)
-			{	
+			{
 				//Do nothing
 			}
 
@@ -60,12 +57,14 @@ namespace HazelTestSuperServer
 		{
 			Connection connection = (Connection)sender;
 			Console.WriteLine("Received (" + string.Join<byte>(", ", args.Bytes) + ") from " + connection.EndPoint.ToString());
+			//ECHO SERVER
 			//connection.SendBytes(args.Bytes, args.SendOption);
+			//BROADCAST
 			//Send data received to all client in List
 			foreach (var conn in clients)
 			{
-				//if (conn != connection)
-				if (true)
+				if (conn != connection) //SENDTOOTHER
+				//if (true)
 				{
 					conn.SendBytes(args.Bytes, args.SendOption);
 				}
