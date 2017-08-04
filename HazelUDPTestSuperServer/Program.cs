@@ -57,9 +57,9 @@ namespace HazelUDPTestSuperServer
 		{
 			Connection connection = (Connection)sender;
 			Console.WriteLine("Received (" + string.Join<byte>(", ", args.Bytes) + ") from " + connection.EndPoint.ToString());
-			//ECHO SERVER
+			//ECHO SERVER (SENDTOSERVER)
 			//connection.SendBytes(args.Bytes, args.SendOption);
-			//BROADCAST
+			//BROADCAST ((SENDTOALL)
 			//Send data received to all client in List
 			foreach (var conn in clients)
 			{
@@ -67,6 +67,7 @@ namespace HazelUDPTestSuperServer
 				//if (true)
 				{
 					conn.SendBytes(args.Bytes, args.SendOption);
+					Console.WriteLine("Send to: " + conn.EndPoint.ToString());
 				}
 
 			}
