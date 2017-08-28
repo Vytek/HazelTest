@@ -80,12 +80,18 @@ namespace HazelUDPTestSuperServer
 		{
 			Connection connection = (Connection)sender;
 			Console.WriteLine("Received (" + string.Join<byte>(", ", args.Bytes) + ") from " + connection.EndPoint.ToString());
+            Console.WriteLine("SendType: " + args.Bytes.GetValue(0).ToString());
+            //Console.WriteLine(((byte)SendType.SENDTOALL).ToString());
 
-            if (args.Bytes.GetValue(0).Equals(SendType.SENDTOALL))
+            //https://stackoverflow.com/questions/943398/get-int-value-from-enum-in-c-sharp
+            //https://msdn.microsoft.com/it-it/library/system.enum.getvalues(v=vs.110).aspx
+            //http://csharp.net-informations.com/statements/enum.htm
+            if (((byte)SendType.SENDTOALL).ToString() == args.Bytes.GetValue(0).ToString())
             {
-				//BROADCAST ((SENDTOALL)
-				//Send data received to all client in List
-				foreach (var conn in clients)
+                //BROADCAST (SENDTOALL)
+                Console.WriteLine("BROADCAST (SENDTOALL)");
+                //Send data received to all client in List
+                foreach (var conn in clients)
 				{
 				    if (true)
 					{
@@ -94,11 +100,12 @@ namespace HazelUDPTestSuperServer
 					}
 
 				}
-            } else if (args.Bytes.GetValue(0).Equals(SendType.SENDTOOTHER))
+            } else if ((byte)SendType.SENDTOOTHER == (byte)args.Bytes.GetValue(0))
             {
-				//BROADCAST (SENDTOOTHER)
-				//Send data received to all other client in List
-				foreach (var conn in clients)
+                //BROADCAST (SENDTOOTHER)
+                Console.WriteLine("BROADCAST (SENDTOOTHER)");
+                //Send data received to all other client in List
+                foreach (var conn in clients)
 				{
 					if (conn != connection) //SENDTOOTHER
 					{
@@ -107,10 +114,11 @@ namespace HazelUDPTestSuperServer
 					}
 
 				} 
-            } else if (args.Bytes.GetValue(0).Equals(SendType.SENDTOSERVER))
+            } else if ((byte)SendType.SENDTOOTHER == (byte)args.Bytes.GetValue(0))
             {
-				//FOR NOW ECHO SERVER (SENDTOSERVER)
-				connection.SendBytes(args.Bytes, args.SendOption);
+                //FOR NOW ECHO SERVER (SENDTOSERVER)
+                Console.WriteLine("FOR NOW ECHO SERVER (SENDTOSERVER)");
+                connection.SendBytes(args.Bytes, args.SendOption);
                 Console.WriteLine("Send to: " + connection.EndPoint.ToString());
 			}
 			args.Recycle();
