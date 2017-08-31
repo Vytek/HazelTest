@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Net;
-using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 
 using Hazel;
 using Hazel.Udp;
 
 namespace HazelUDPTestSuperServer
 {
-	public class Server
+    public class Server
 	{
-		public static Hashtable clientList = new Hashtable();
-
-		public int portNumber = 4296;
-
-		private int counter = 0;
+        public int portNumber = 4296;
 
 		public bool Running { get; private set; }
 
@@ -25,11 +21,14 @@ namespace HazelUDPTestSuperServer
 		{
 			SENDTOALL = 0,
 			SENDTOOTHER = 1,
-			SENDTOSERVER = 2
+			SENDTOSERVER = 2,
+            SENDTOUID = 3
 		}
 
-		List<Connection> clients = new List<Connection>();
-
+        //List<Connection> clients = new List<Connection>();
+        //https://stackoverflow.com/questions/8629285/how-to-create-a-collection-like-liststring-object
+        List<KeyValuePair<String, Connection>> clients = new List<KeyValuePair<String, Connection>>();
+        
         /// <summary>
         /// Start this instance.
         /// </summary>
@@ -42,7 +41,6 @@ namespace HazelUDPTestSuperServer
 
 			Console.WriteLine("Starting server!");
 			Console.WriteLine("Server listening on " + (listener as UdpConnectionListener).EndPoint);
-
 			listener.NewConnection += NewConnectionHandler;
 			listener.Start();
 
@@ -64,9 +62,12 @@ namespace HazelUDPTestSuperServer
         /// <param name="args">Arguments.</param>
 		private void NewConnectionHandler(object sender, NewConnectionEventArgs args)
 		{
-			Console.WriteLine("New connection from " + args.Connection.EndPoint.ToString());
-			clients.Add(args.Connection);
-			args.Connection.DataReceived += this.DataReceivedHandler;
+            string UID = RandomIdGenerator.GetBase62(6);
+            Console.WriteLine("UID Created: " + UID);
+            //https://www.dotnetperls.com/keyvaluepair
+            clients.Add(new KeyValuePair<string, Connection>(UID, args.Connection));
+            Console.WriteLine("New connection from " + args.Connection.EndPoint.ToString() + " with UID: "+ UID);
+            args.Connection.DataReceived += this.DataReceivedHandler;
 			args.Connection.Disconnected += this.ClientDisconnectHandler;
 			args.Recycle();
 		}
@@ -95,8 +96,8 @@ namespace HazelUDPTestSuperServer
 				{
 				    if (true)
 					{
-						conn.SendBytes(args.Bytes, args.SendOption);
-						Console.WriteLine("Send to: " + conn.EndPoint.ToString());
+						conn.Value.SendBytes(args.Bytes, args.SendOption);
+						Console.WriteLine("Send to: " + conn.Value.EndPoint.ToString());
 					}
 
 				}
@@ -107,10 +108,10 @@ namespace HazelUDPTestSuperServer
                 //Send data received to all other client in List
                 foreach (var conn in clients)
 				{
-					if (conn != connection) //SENDTOOTHER
+					if (conn.Value != connection) //SENDTOOTHER
 					{
-						conn.SendBytes(args.Bytes, args.SendOption);
-						Console.WriteLine("Send to: " + conn.EndPoint.ToString());
+                        conn.Value.SendBytes(args.Bytes, args.SendOption);
+						Console.WriteLine("Send to: " + conn.Value.EndPoint.ToString());
 					}
 
 				} 
@@ -133,7 +134,8 @@ namespace HazelUDPTestSuperServer
 		{
 			Connection connection = (Connection)sender;
 			Console.WriteLine("Connection from " + connection.EndPoint + " lost");
-			clients.Remove(connection);
+            //https://stackoverflow.com/posts/1608949/revisions
+            clients.RemoveAll(item => item.Value.Equals(connection));
 			args.Recycle();
 		}
 
@@ -146,7 +148,38 @@ namespace HazelUDPTestSuperServer
 			}
 		}
 
-		class MainClass
+        //https://stackoverflow.com/posts/9543797/revisions
+        //https://stackoverflow.com/questions/9543715/generating-human-readable-usable-short-but-unique-ids?answertab=votes#tab-top
+        public static class RandomIdGenerator
+        {
+            private static char[] _base62chars =
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+                .ToCharArray();
+
+            private static Random _random = new Random();
+
+            public static string GetBase62(int length)
+            {
+                var sb = new StringBuilder(length);
+
+                for (int i = 0; i < length; i++)
+                    sb.Append(_base62chars[_random.Next(62)]);
+
+                return sb.ToString();
+            }
+
+            public static string GetBase36(int length)
+            {
+                var sb = new StringBuilder(length);
+
+                for (int i = 0; i < length; i++)
+                    sb.Append(_base62chars[_random.Next(36)]);
+
+                return sb.ToString();
+            }
+        }
+
+        class MainClass
 		{
 			public static void Main(string[] args)
 			{
