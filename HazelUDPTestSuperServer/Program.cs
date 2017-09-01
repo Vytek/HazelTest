@@ -1,10 +1,16 @@
 ﻿using System;
 using System.Net;
+using System.Collections
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
+using FlatBuffers;
 
 using Hazel;
 using Hazel.Udp;
+
+using HazelTest;
+using HazelMessage;
 
 namespace HazelUDPTestSuperServer
 {
@@ -23,6 +29,15 @@ namespace HazelUDPTestSuperServer
 			SENDTOOTHER = 1,
 			SENDTOSERVER = 2,
             SENDTOUID = 3
+		}
+
+        /// <summary>
+        /// Command type.
+        /// </summary>
+		public enum CommandType : sbyte
+		{
+			LOGIN = 0,
+            DISCONNECTEDCLIENT = 1
 		}
 
         //List<Connection> clients = new List<Connection>();
@@ -115,11 +130,38 @@ namespace HazelUDPTestSuperServer
 					}
 
 				} 
-            } else if ((byte)SendType.SENDTOOTHER == (byte)args.Bytes.GetValue(0))
+            } else if ((byte)SendType.SENDTOSERVER == (byte)args.Bytes.GetValue(0))
             {
                 //FOR NOW ECHO SERVER (SENDTOSERVER)
                 Console.WriteLine("FOR NOW ECHO SERVER (SENDTOSERVER)");
                 connection.SendBytes(args.Bytes, args.SendOption);
+				//Parser Message
+				//Remove first byte (type)
+				//https://stackoverflow.com/questions/31550484/faster-code-to-remove-first-elements-from-byte-array
+				byte STypeBuffer = args.Bytes[0]; 
+				byte[] NewBufferReceiver = new byte[args.Bytes.Length - 1];
+				Array.Copy(args.Bytes, 1, NewBufferReceiver, 0, NewBufferReceiver.Length);
+				ByteBuffer bb = new ByteBuffer(NewBufferReceiver);
+                //Decoder FlatBuffer
+                if (STypeBuffer == 4)
+                {
+                    HazelMessage.HMessage HMessageReceived = HazelMessage.HMessage.GetRootAsHMessage(bb);
+                    if ((byte)CommandType.LOGIN == HMessageReceived.Command)
+                    {
+						//Cerca e restituisci il tutto
+						foreach (var conn in clients)
+						{
+							if (conn.Value == connection) //SENDTOSERVER
+							{
+                                String UIDBuffer = conn.Key;
+                                Console.WriteLine("UID: " + UIDBuffer);
+							}
+
+						}
+					}
+                }
+                //Encode FlatBuffer
+                //Reply to Client
                 Console.WriteLine("Send to: " + connection.EndPoint.ToString());
 			}
 			args.Recycle();
@@ -139,6 +181,9 @@ namespace HazelUDPTestSuperServer
 			args.Recycle();
 		}
 
+        /// <summary>
+        /// Shutdown this instance.
+        /// </summary>
 		public void Shutdown()
 		{
 			if (Running)
@@ -150,6 +195,9 @@ namespace HazelUDPTestSuperServer
 
         //https://stackoverflow.com/posts/9543797/revisions
         //https://stackoverflow.com/questions/9543715/generating-human-readable-usable-short-but-unique-ids?answertab=votes#tab-top
+        /// <summary>
+        /// Random identifier generator.
+        /// </summary>
         public static class RandomIdGenerator
         {
             private static char[] _base62chars =
@@ -179,6 +227,9 @@ namespace HazelUDPTestSuperServer
             }
         }
 
+        /// <summary>
+        /// Main class.
+        /// </summary>
         class MainClass
 		{
 			public static void Main(string[] args)

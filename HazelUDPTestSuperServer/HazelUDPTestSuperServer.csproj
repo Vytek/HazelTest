@@ -42,6 +42,8 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SaveSchemaHazelMessage.cs" />
+    <Compile Include="SaveSchemaHazel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DocInclude\common.xml" />
