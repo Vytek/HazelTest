@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Net;
-using System.Collections
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -133,8 +133,7 @@ namespace HazelUDPTestSuperServer
             } else if ((byte)SendType.SENDTOSERVER == (byte)args.Bytes.GetValue(0))
             {
                 //FOR NOW ECHO SERVER (SENDTOSERVER)
-                Console.WriteLine("FOR NOW ECHO SERVER (SENDTOSERVER)");
-                connection.SendBytes(args.Bytes, args.SendOption);
+                Console.WriteLine("CLIENT TO SERVER (SENDTOSERVER)");
 				//Parser Message
 				//Remove first byte (type)
 				//https://stackoverflow.com/questions/31550484/faster-code-to-remove-first-elements-from-byte-array
@@ -142,26 +141,46 @@ namespace HazelUDPTestSuperServer
 				byte[] NewBufferReceiver = new byte[args.Bytes.Length - 1];
 				Array.Copy(args.Bytes, 1, NewBufferReceiver, 0, NewBufferReceiver.Length);
 				ByteBuffer bb = new ByteBuffer(NewBufferReceiver);
-                //Decoder FlatBuffer
-                if (STypeBuffer == 4)
+				//Decoder FlatBuffer
+				String UIDBuffer = String.Empty;
+                if (STypeBuffer == 2)
                 {
                     HazelMessage.HMessage HMessageReceived = HazelMessage.HMessage.GetRootAsHMessage(bb);
-                    if ((byte)CommandType.LOGIN == HMessageReceived.Command)
+                    if ((sbyte)CommandType.LOGIN == HMessageReceived.Command)
                     {
 						//Cerca e restituisci il tutto
 						foreach (var conn in clients)
 						{
 							if (conn.Value == connection) //SENDTOSERVER
 							{
-                                String UIDBuffer = conn.Key;
+                                UIDBuffer = conn.Key;
                                 Console.WriteLine("UID: " + UIDBuffer);
 							}
 
 						}
 					}
                 }
-                //Encode FlatBuffer
-                //Reply to Client
+				//Encode FlatBuffer
+				//Create flatbuffer class
+				FlatBufferBuilder fbb = new FlatBufferBuilder(1);
+
+				StringOffset SOUIDBuffer = fbb.CreateString(UIDBuffer);
+
+                HazelMessage.HMessage.StartHMessage(fbb);
+                HazelMessage.HMessage.AddCommand(fbb,(sbyte)CommandType.LOGIN);
+                HazelMessage.HMessage.AddAnswer(fbb, SOUIDBuffer);
+                var offset = HazelMessage.HMessage.EndHMessage(fbb);
+                HazelMessage.HMessage.FinishHMessageBuffer(fbb, offset);
+				//Reply to Client
+				using (var ms = new MemoryStream(fbb.DataBuffer.Data, fbb.DataBuffer.Position, fbb.Offset))
+				{
+					//Add type!
+					//https://stackoverflow.com/questions/5591329/c-sharp-how-to-add-byte-to-byte-array
+					byte[] newArray = new byte[ms.ToArray().Length + 1];
+					ms.ToArray().CopyTo(newArray, 1);
+                    newArray[0] = (byte)SendType.SENDTOSERVER;
+					connection.SendBytes(newArray, args.SendOption);
+				}
                 Console.WriteLine("Send to: " + connection.EndPoint.ToString());
 			}
 			args.Recycle();
