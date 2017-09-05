@@ -195,8 +195,47 @@ namespace HazelUDPTestSuperServer
 		{
 			Connection connection = (Connection)sender;
 			Console.WriteLine("Connection from " + connection.EndPoint + " lost");
-            //https://stackoverflow.com/posts/1608949/revisions
-            clients.RemoveAll(item => item.Value.Equals(connection));
+            String UIDBuffer = String.Empty;
+			//Cerca e restituisci il tutto
+			foreach (var conn in clients)
+			{
+				if (conn.Value == connection) //SENDTOSERVER
+				{
+					UIDBuffer = conn.Key;
+					Console.WriteLine("UID TO DESTROY: " + UIDBuffer);
+				}
+
+			}
+
+			//https://stackoverflow.com/posts/1608949/revisions //Debug
+            //Delete client disconnected
+			clients.RemoveAll(item => item.Value.Equals(connection));
+
+			//Encode FlatBuffer
+			//Create flatbuffer class
+			FlatBufferBuilder fbb = new FlatBufferBuilder(1);
+
+			StringOffset SOUIDBuffer = fbb.CreateString(UIDBuffer);
+
+			HazelMessage.HMessage.StartHMessage(fbb);
+			HazelMessage.HMessage.AddCommand(fbb, (sbyte)CommandType.DISCONNECTEDCLIENT);
+			HazelMessage.HMessage.AddAnswer(fbb, SOUIDBuffer);
+			var offset = HazelMessage.HMessage.EndHMessage(fbb);
+			HazelMessage.HMessage.FinishHMessageBuffer(fbb, offset);
+			//Reply to all Client
+			using (var ms = new MemoryStream(fbb.DataBuffer.Data, fbb.DataBuffer.Position, fbb.Offset))
+			{
+				//Add type!
+				//https://stackoverflow.com/questions/5591329/c-sharp-how-to-add-byte-to-byte-array
+				byte[] newArray = new byte[ms.ToArray().Length + 1];
+				ms.ToArray().CopyTo(newArray, 1);
+				newArray[0] = (byte)SendType.SENDTOSERVER;
+				foreach (var conn in clients)
+				{
+                    conn.Value.SendBytes(newArray, SendOption.Reliable);
+					Console.WriteLine("Send to: " + conn.Value.EndPoint.ToString());
+				}
+			}
 			args.Recycle();
 		}
 
