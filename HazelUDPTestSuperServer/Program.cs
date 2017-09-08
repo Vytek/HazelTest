@@ -2,6 +2,7 @@
 using System.Net;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.IO;
 using FlatBuffers;
@@ -11,8 +12,9 @@ using Hazel.Udp;
 
 using HazelTest;
 using HazelMessage;
+using System.Threading;
 
-namespace HazelUDPTestSuperServer
+namespace HazelUDPTestSuperStressServer
 {
     public class Server
 	{
@@ -40,10 +42,22 @@ namespace HazelUDPTestSuperServer
             DISCONNECTEDCLIENT = 1
 		}
 
+        /// <summary>
+        /// Client message received.
+        /// </summary>
+		public struct ClientMessageReceived
+		{
+            public byte[] MessageBytes;
+            public Connection ClientConnected;
+            public Hazel.SendOption SOClientConnected;
+		};
+
         //List<Connection> clients = new List<Connection>();
-        //https://stackoverflow.com/questions/8629285/how-to-create-a-collection-like-liststring-object
-        List<KeyValuePair<String, Connection>> clients = new List<KeyValuePair<String, Connection>>();
-        
+		//https://stackoverflow.com/questions/8629285/how-to-create-a-collection-like-liststring-object
+		List<KeyValuePair<String, Connection>> clients = new List<KeyValuePair<String, Connection>>();
+        //Queue Messages
+        ConcurrentQueue<ClientMessageReceived> QueueMessages = new ConcurrentQueue<ClientMessageReceived>();
+
         /// <summary>
         /// Start this instance.
         /// </summary>
@@ -97,94 +111,117 @@ namespace HazelUDPTestSuperServer
 			Connection connection = (Connection)sender;
 			Console.WriteLine("Received (" + string.Join<byte>(", ", args.Bytes) + ") from " + connection.EndPoint.ToString());
             Console.WriteLine("SendType: " + args.Bytes.GetValue(0).ToString());
-            //Console.WriteLine(((byte)SendType.SENDTOALL).ToString());
+			//Console.WriteLine(((byte)SendType.SENDTOALL).ToString());
 
-            //https://stackoverflow.com/questions/943398/get-int-value-from-enum-in-c-sharp
-            //https://msdn.microsoft.com/it-it/library/system.enum.getvalues(v=vs.110).aspx
-            //http://csharp.net-informations.com/statements/enum.htm
-            if (((byte)SendType.SENDTOALL).ToString() == args.Bytes.GetValue(0).ToString())
-            {
-                //BROADCAST (SENDTOALL)
-                Console.WriteLine("BROADCAST (SENDTOALL)");
-                //Send data received to all client in List
-                foreach (var conn in clients)
-				{
-				    if (true)
-					{
-						conn.Value.SendBytes(args.Bytes, args.SendOption);
-						Console.WriteLine("Send to: " + conn.Value.EndPoint.ToString());
-					}
+			//Create Struct ClientMessageReceived
+			ClientMessageReceived NewClientConnected;
+            NewClientConnected.ClientConnected = connection;
+            NewClientConnected.MessageBytes = args.Bytes;
+            NewClientConnected.SOClientConnected = args.SendOption;
 
-				}
-            } else if ((byte)SendType.SENDTOOTHER == (byte)args.Bytes.GetValue(0))
-            {
-                //BROADCAST (SENDTOOTHER)
-                Console.WriteLine("BROADCAST (SENDTOOTHER)");
-                //Send data received to all other client in List
-                foreach (var conn in clients)
-				{
-					if (conn.Value != connection) //SENDTOOTHER
-					{
-                        conn.Value.SendBytes(args.Bytes, args.SendOption);
-						Console.WriteLine("Send to: " + conn.Value.EndPoint.ToString());
-					}
-
-				} 
-            } else if ((byte)SendType.SENDTOSERVER == (byte)args.Bytes.GetValue(0))
-            {
-                //FOR NOW ECHO SERVER (SENDTOSERVER)
-                Console.WriteLine("CLIENT TO SERVER (SENDTOSERVER)");
-				//Parser Message
-				//Remove first byte (type)
-				//https://stackoverflow.com/questions/31550484/faster-code-to-remove-first-elements-from-byte-array
-				byte STypeBuffer = args.Bytes[0]; 
-				byte[] NewBufferReceiver = new byte[args.Bytes.Length - 1];
-				Array.Copy(args.Bytes, 1, NewBufferReceiver, 0, NewBufferReceiver.Length);
-				ByteBuffer bb = new ByteBuffer(NewBufferReceiver);
-				//Decoder FlatBuffer
-				String UIDBuffer = String.Empty;
-                if (STypeBuffer == 2)
-                {
-                    HazelMessage.HMessage HMessageReceived = HazelMessage.HMessage.GetRootAsHMessage(bb);
-                    if ((sbyte)CommandType.LOGIN == HMessageReceived.Command)
-                    {
-						//Cerca e restituisci il tutto
-						foreach (var conn in clients)
-						{
-							if (conn.Value == connection) //SENDTOSERVER
-							{
-                                UIDBuffer = conn.Key;
-                                Console.WriteLine("UID: " + UIDBuffer);
-							}
-
-						}
-					}
-                }
-				//Encode FlatBuffer
-				//Create flatbuffer class
-				FlatBufferBuilder fbb = new FlatBufferBuilder(1);
-
-				StringOffset SOUIDBuffer = fbb.CreateString(UIDBuffer);
-
-                HazelMessage.HMessage.StartHMessage(fbb);
-                HazelMessage.HMessage.AddCommand(fbb,(sbyte)CommandType.LOGIN);
-                HazelMessage.HMessage.AddAnswer(fbb, SOUIDBuffer);
-                var offset = HazelMessage.HMessage.EndHMessage(fbb);
-                HazelMessage.HMessage.FinishHMessageBuffer(fbb, offset);
-				//Reply to Client
-				using (var ms = new MemoryStream(fbb.DataBuffer.Data, fbb.DataBuffer.Position, fbb.Offset))
-				{
-					//Add type!
-					//https://stackoverflow.com/questions/5591329/c-sharp-how-to-add-byte-to-byte-array
-					byte[] newArray = new byte[ms.ToArray().Length + 1];
-					ms.ToArray().CopyTo(newArray, 1);
-                    newArray[0] = (byte)SendType.SENDTOSERVER;
-					connection.SendBytes(newArray, args.SendOption);
-				}
-                Console.WriteLine("Send to: " + connection.EndPoint.ToString());
-			}
+            //Add To main Queue
+            QueueMessages.Enqueue(NewClientConnected);
+                              
 			args.Recycle();
 		}
+
+        private static void ConsumerThread(object arg)
+        {
+            ClientMessageReceived item;
+            while (true)
+            {
+                bool isSuccessful = Server.QueueMessages.TryDequeue(out item);
+                if (isSuccessful)
+                {
+                    //https://stackoverflow.com/questions/943398/get-int-value-from-enum-in-c-sharp
+                    //https://msdn.microsoft.com/it-it/library/system.enum.getvalues(v=vs.110).aspx
+                    //http://csharp.net-informations.com/statements/enum.htm
+                    if (((byte)SendType.SENDTOALL).ToString() == item.MessageBytes.GetValue(0).ToString())
+                    {
+                        //BROADCAST (SENDTOALL)
+                        Console.WriteLine("BROADCAST (SENDTOALL)");
+                        //Send data received to all client in List
+                        foreach (var conn in Server.clients)
+                        {
+                            if (true)
+                            {
+                                conn.Value.SendBytes(item.MessageBytes, item.SOClientConnected);
+                                Console.WriteLine("Send to: " + conn.Value.EndPoint.ToString());
+                            }
+
+                        }
+                    }
+                    else if ((byte)SendType.SENDTOOTHER == (byte)item.MessageBytes.GetValue(0))
+                    {
+                        //BROADCAST (SENDTOOTHER)
+                        Console.WriteLine("BROADCAST (SENDTOOTHER)");
+                        //Send data received to all other client in List
+                        foreach (var conn in Server.clients)
+                        {
+                            if (conn.Value != item.ClientConnected) //SENDTOOTHER
+                            {
+                                conn.Value.SendBytes(item.MessageBytes, item.SOClientConnected);
+                                Console.WriteLine("Send to: " + conn.Value.EndPoint.ToString());
+                            }
+
+                        }
+                    }
+                    else if ((byte)SendType.SENDTOSERVER == (byte)item.MessageBytes.GetValue(0))
+                    {
+                        //FOR NOW ECHO SERVER (SENDTOSERVER)
+                        Console.WriteLine("CLIENT TO SERVER (SENDTOSERVER)");
+                        //Parser Message
+                        //Remove first byte (type)
+                        //https://stackoverflow.com/questions/31550484/faster-code-to-remove-first-elements-from-byte-array
+                        byte STypeBuffer = item.MessageBytes[0];
+                        byte[] NewBufferReceiver = new byte[item.MessageBytes.Length - 1];
+                        Array.Copy(item.MessageBytes, 1, NewBufferReceiver, 0, NewBufferReceiver.Length);
+                        ByteBuffer bb = new ByteBuffer(NewBufferReceiver);
+                        //Decoder FlatBuffer
+                        String UIDBuffer = String.Empty;
+                        if (STypeBuffer == 2)
+                        {
+                            HazelMessage.HMessage HMessageReceived = HazelMessage.HMessage.GetRootAsHMessage(bb);
+                            if ((sbyte)CommandType.LOGIN == HMessageReceived.Command)
+                            {
+                                //Cerca e restituisci il tutto
+                                foreach (var conn in Server.clients)
+                                {
+                                    if (conn.Value == item.ClientConnected) //SENDTOSERVER
+                                    {
+                                        UIDBuffer = conn.Key;
+                                        Console.WriteLine("UID: " + UIDBuffer);
+                                    }
+
+                                }
+                            }
+                        }
+                        //Encode FlatBuffer
+                        //Create flatbuffer class
+                        FlatBufferBuilder fbb = new FlatBufferBuilder(1);
+
+                        StringOffset SOUIDBuffer = fbb.CreateString(UIDBuffer);
+
+                        HazelMessage.HMessage.StartHMessage(fbb);
+                        HazelMessage.HMessage.AddCommand(fbb, (sbyte)CommandType.LOGIN);
+                        HazelMessage.HMessage.AddAnswer(fbb, SOUIDBuffer);
+                        var offset = HazelMessage.HMessage.EndHMessage(fbb);
+                        HazelMessage.HMessage.FinishHMessageBuffer(fbb, offset);
+                        //Reply to Client
+                        using (var ms = new MemoryStream(fbb.DataBuffer.Data, fbb.DataBuffer.Position, fbb.Offset))
+                        {
+                            //Add type!
+                            //https://stackoverflow.com/questions/5591329/c-sharp-how-to-add-byte-to-byte-array
+                            byte[] newArray = new byte[ms.ToArray().Length + 1];
+                            ms.ToArray().CopyTo(newArray, 1);
+                            newArray[0] = (byte)SendType.SENDTOSERVER;
+                            item.ClientConnected.SendBytes(newArray, item.SOClientConnected);
+                        }
+                        Console.WriteLine("Send to: " + item.ClientConnected.EndPoint.ToString());
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Clients the disconnect handler.
@@ -294,6 +331,7 @@ namespace HazelUDPTestSuperServer
 			{
 				Server ServerHazel = new Server();
 				ServerHazel.Start();
+                ThreadPool.QueueUserWorkItem(ConsumerThread);
 			}
 		}
 	}
