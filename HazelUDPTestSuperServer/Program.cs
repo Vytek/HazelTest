@@ -54,9 +54,9 @@ namespace HazelUDPTestSuperStressServer
 
         //List<Connection> clients = new List<Connection>();
 		//https://stackoverflow.com/questions/8629285/how-to-create-a-collection-like-liststring-object
-		List<KeyValuePair<String, Connection>> clients = new List<KeyValuePair<String, Connection>>();
+		static List<KeyValuePair<String, Connection>> clients = new List<KeyValuePair<String, Connection>>();
         //Queue Messages
-        ConcurrentQueue<ClientMessageReceived> QueueMessages = new ConcurrentQueue<ClientMessageReceived>();
+        static ConcurrentQueue<ClientMessageReceived> QueueMessages = new ConcurrentQueue<ClientMessageReceived>();
 
         /// <summary>
         /// Start this instance.
@@ -131,6 +131,7 @@ namespace HazelUDPTestSuperStressServer
             while (true)
             {
                 bool isSuccessful = Server.QueueMessages.TryDequeue(out item);
+                //Console.WriteLine("Dequeue: " + isSuccessful);
                 if (isSuccessful)
                 {
                     //https://stackoverflow.com/questions/943398/get-int-value-from-enum-in-c-sharp
@@ -329,9 +330,9 @@ namespace HazelUDPTestSuperStressServer
 		{
 			public static void Main(string[] args)
 			{
-				Server ServerHazel = new Server();
+                ThreadPool.QueueUserWorkItem(Server.ConsumerThread);
+                Server ServerHazel = new Server();
 				ServerHazel.Start();
-                ThreadPool.QueueUserWorkItem(ConsumerThread);
 			}
 		}
 	}
