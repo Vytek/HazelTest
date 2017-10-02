@@ -14,7 +14,7 @@ using HazelTest;
 using HazelMessage;
 using System.Threading;
 
-namespace HazelUDPTestSuperStressServer
+namespace HazelUDPTestSuperServer
 {
     public class Server
 	{
@@ -58,12 +58,19 @@ namespace HazelUDPTestSuperStressServer
         //Queue Messages
         static ConcurrentQueue<ClientMessageReceived> QueueMessages = new ConcurrentQueue<ClientMessageReceived>();
 
+        static ManualResetEvent _quitEvent = new ManualResetEvent(false);
+
         /// <summary>
         /// Start this instance.
         /// </summary>
 		public void Start()
 		{
-			NetworkEndPoint endPoint = new NetworkEndPoint(IPAddress.Any, portNumber);
+			Console.CancelKeyPress += (sender, eArgs) => {
+				_quitEvent.Set();
+				eArgs.Cancel = true;
+			};
+
+            NetworkEndPoint endPoint = new NetworkEndPoint(IPAddress.Any, portNumber);
 			ConnectionListener listener = new UdpConnectionListener(endPoint);
 
 			Running = true;
@@ -73,10 +80,7 @@ namespace HazelUDPTestSuperStressServer
 			listener.NewConnection += NewConnectionHandler;
 			listener.Start();
 
-			while (Running)
-			{
-				//Do nothing
-			}
+			_quitEvent.WaitOne();
 
 			//Close all
 			listener.Close();
@@ -121,17 +125,19 @@ namespace HazelUDPTestSuperStressServer
 
             //Add To main Queue
             QueueMessages.Enqueue(NewClientConnected);
-                              
-			args.Recycle();
+            ThreadPool.QueueUserWorkItem(Server.ConsumerThread);
+            args.Recycle();
 		}
 
         private static void ConsumerThread(object arg)
         {
             ClientMessageReceived item;
-            while (true)
+            //while (true)
+            Console.WriteLine("Queue: " + Server.QueueMessages.Count.ToString());
+            while (!Server.QueueMessages.IsEmpty)
             {
                 bool isSuccessful = Server.QueueMessages.TryDequeue(out item);
-                //Console.WriteLine("Dequeue: " + isSuccessful);
+                Console.WriteLine("Dequeue: " + isSuccessful);
                 if (isSuccessful)
                 {
                     //https://stackoverflow.com/questions/943398/get-int-value-from-enum-in-c-sharp
