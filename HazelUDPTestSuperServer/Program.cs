@@ -30,7 +30,7 @@ namespace HazelUDPTestSuperServer
 			SENDTOALL = 0,
 			SENDTOOTHER = 1,
 			SENDTOSERVER = 2,
-            SENDTOUID = 3
+            SENDTOUID = 3 //NOT IMPLEMENTED
 		}
 
         /// <summary>
@@ -65,10 +65,13 @@ namespace HazelUDPTestSuperServer
         /// </summary>
 		public void Start()
 		{
-			Console.CancelKeyPress += (sender, eArgs) => {
+            //https://stackoverflow.com/questions/2586612/how-to-keep-a-net-console-app-running
+            Console.CancelKeyPress += (sender, eArgs) => {
 				_quitEvent.Set();
 				eArgs.Cancel = true;
 			};
+
+            //Connect and create users collection for LiteDB.org
 
             NetworkEndPoint endPoint = new NetworkEndPoint(IPAddress.Any, portNumber);
 			ConnectionListener listener = new UdpConnectionListener(endPoint);
@@ -129,6 +132,10 @@ namespace HazelUDPTestSuperServer
             args.Recycle();
 		}
 
+        /// <summary>
+        /// Consumers the thread.
+        /// </summary>
+        /// <param name="arg">Argument.</param>
         private static void ConsumerThread(object arg)
         {
             ClientMessageReceived item;
@@ -196,6 +203,7 @@ namespace HazelUDPTestSuperServer
                                 {
                                     if (conn.Value == item.ClientConnected) //SENDTOSERVER
                                     {
+                                        //TODO: Check here if user exist and password correct
                                         UIDBuffer = conn.Key;
                                         Console.WriteLine("UID: " + UIDBuffer);
                                     }
@@ -245,7 +253,7 @@ namespace HazelUDPTestSuperServer
 			{
 				if (conn.Value == connection) //SENDTOSERVER
 				{
-					UIDBuffer = conn.Key;
+                    UIDBuffer = conn.Key;
 					Console.WriteLine("UID TO DESTROY: " + UIDBuffer);
 				}
 
