@@ -34,10 +34,15 @@
     <Reference Include="Hazel">
       <HintPath>..\packages\DarkRiftNetworking.Hazel.0.1.2-beta\lib\net35\Hazel.dll</HintPath>
     </Reference>
+    <Reference Include="DevZH.FlatBuffers">
+      <HintPath>..\packages\DevZH.FlatBuffers.1.4.0\lib\net35\DevZH.FlatBuffers.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SaveSchemaHazel.cs" />
+    <Compile Include="SaveSchemaHazelMessage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DocInclude\common.xml" />
