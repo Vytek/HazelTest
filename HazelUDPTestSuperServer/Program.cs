@@ -13,6 +13,8 @@ using Hazel.Udp;
 using HazelTest;
 using HazelMessage;
 using System.Threading;
+using LiteDB;
+using Scrypt;
 
 namespace HazelUDPTestSuperServer
 {
@@ -22,9 +24,20 @@ namespace HazelUDPTestSuperServer
 
 		public bool Running { get; private set; }
 
-		/// <summary>
-		/// Send type.
-		/// </summary>
+        /// <summary>
+        /// Users class.
+        /// </summary>
+        public class Users
+        {
+            public int Id { get; set; }
+            public string UserName { get; set; }
+            public string UserPassword { get; set; }
+            public bool IsActive { get; set; }
+        }
+
+        /// <summary>
+        /// Send type.
+        /// </summary>
         public enum SendType: byte
 		{
 			SENDTOALL = 0,
@@ -59,6 +72,9 @@ namespace HazelUDPTestSuperServer
         static ConcurrentQueue<ClientMessageReceived> QueueMessages = new ConcurrentQueue<ClientMessageReceived>();
 
         static ManualResetEvent _quitEvent = new ManualResetEvent(false);
+        
+        //LiteDB connection
+        static LiteDatabase db = new LiteDatabase(@"Users.db");
 
         /// <summary>
         /// Start this instance.
@@ -72,7 +88,29 @@ namespace HazelUDPTestSuperServer
 			};
 
             //Connect and create users collection for LiteDB.org
+            // Get customer collection
+            var col = db.GetCollection<Users>("users");
 
+            if (col.Count() == 0)
+            {
+                ScryptEncoder encoder = new ScryptEncoder();
+                string hashsedPassword = encoder.Encode("test1234!");
+
+                // Create your new customer instance
+                var user = new Users
+                {
+                    UserName = "Vytek75",
+                    UserPassword = hashsedPassword,
+                    IsActive = true
+                };
+
+                // Create unique index in Name field
+                col.EnsureIndex(x => x.UserName, true);
+
+                // Insert new customer document (Id will be auto-incremented)
+                col.Insert(user);
+            }
+           
             NetworkEndPoint endPoint = new NetworkEndPoint(IPAddress.Any, portNumber);
 			ConnectionListener listener = new UdpConnectionListener(endPoint);
 
