@@ -59,7 +59,7 @@ namespace HazelUDPTestClient
                 {
                     //Create LOGIN message
                     //Login
-                    String UIDBuffer = "Vytek75#1234;test1234"; 
+                    String UIDBuffer = "Vytek75;test1234!"; 
 
                     //Encode FlatBuffer
                     //Create flatbuffer class

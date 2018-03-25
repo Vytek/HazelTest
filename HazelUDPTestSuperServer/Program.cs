@@ -88,7 +88,7 @@ namespace HazelUDPTestSuperServer
 			};
 
             //Connect and create users collection for LiteDB.org
-            // Get customer collection
+            //Get users collection
             var col = db.GetCollection<Users>("users");
 
             if (col.Count() == 0)
@@ -242,10 +242,40 @@ namespace HazelUDPTestSuperServer
                                     if (conn.Value == item.ClientConnected) //SENDTOSERVER
                                     {
                                         //TODO: Check here if user exist and password correct
-                                        UIDBuffer = conn.Key;
-                                        Console.WriteLine("UID: " + UIDBuffer);
+                                        //Get users collection
+                                        var col = db.GetCollection<Users>("users");
+                                        //Parse HMessageReceived
+                                        string[] words = HMessageReceived.Answer.Split(';');
+                                        //words[0] = Login; words[1] = Password
+                                        if (col.Count(Query.EQ("UserName", words[0]))==1)
+                                        {
+                                            var results = col.Find(Query.EQ("UserName", words[0]));
+                                            string UserPasswordRecord = string.Empty;
+                                            foreach (var c in results)
+                                            {
+                                                Console.WriteLine("#{0} - {1}", c.Id, c.UserName);
+                                                UserPasswordRecord = c.UserPassword;
+                                            }
+                                            //Verify password
+                                            ScryptEncoder encoder = new ScryptEncoder();
+                                            //Check password
+                                            if (encoder.Compare(words[1], UserPasswordRecord))
+                                            {
+                                                UIDBuffer = conn.Key;
+                                                Console.WriteLine("UID: " + UIDBuffer);
+                                            }
+                                            else
+                                            {
+                                                UIDBuffer = string.Empty;
+                                                Console.WriteLine("UID: ERROR PASSWORD" + UIDBuffer);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            UIDBuffer = string.Empty;
+                                            Console.WriteLine("UID: USER NOT EXISTS!" + UIDBuffer);
+                                        }
                                     }
-
                                 }
                             }
                         }
