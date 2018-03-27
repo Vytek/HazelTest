@@ -261,11 +261,13 @@ namespace HazelUDPTestSuperServer
                                             //Check password
                                             if (encoder.Compare(words[1], UserPasswordRecord))
                                             {
+                                                //OK
                                                 UIDBuffer = conn.Key;
                                                 Console.WriteLine("UID: " + UIDBuffer);
                                             }
                                             else
                                             {
+                                                //*NOT* OK
                                                 UIDBuffer = string.Empty;
                                                 Console.WriteLine("UID: ERROR PASSWORD" + UIDBuffer);
                                             }
