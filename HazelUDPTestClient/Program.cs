@@ -112,6 +112,7 @@ namespace HazelUDPTestClient
 		private static void DataReceived(object sender, DataReceivedEventArgs args)
 		{
 			Console.WriteLine("Received (" + string.Join<byte>(", ", args.Bytes) + ") from " + connection.EndPoint.ToString());
+            //Decode parse received data
 
 			args.Recycle();
 		}
