@@ -95,7 +95,10 @@ namespace HazelUDPTestSuperServer
             {
                 ScryptEncoder encoder = new ScryptEncoder();
                 string hashsedPassword = encoder.Encode("test1234!");
-
+                //Console.WriteLine(hashsedPassword);
+                //Same password
+                //string hashsedPassword2 = encoder.Encode("test1234!");
+                //Console.WriteLine(hashsedPassword);
                 // Create your new customer instance
                 var user = new Users
                 {
