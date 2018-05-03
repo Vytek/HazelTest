@@ -15,6 +15,7 @@ using HazelMessage;
 using System.Threading;
 using LiteDB;
 using Scrypt;
+using System.Reflection;
 
 namespace HazelUDPTestSuperServer
 {
@@ -74,7 +75,7 @@ namespace HazelUDPTestSuperServer
         static ManualResetEvent _quitEvent = new ManualResetEvent(false);
         
         //LiteDB connection
-        static LiteDatabase db = new LiteDatabase(@"Users.db");
+        static LiteDatabase db = new LiteDatabase(Path.Combine(AssemblyDirectory, @"Users.db"));
 
         /// <summary>
         /// Start this instance.
@@ -120,6 +121,7 @@ namespace HazelUDPTestSuperServer
 			Running = true;
 
 			Console.WriteLine("Starting server!");
+            Console.WriteLine("BD file path: " + Path.Combine(AssemblyDirectory, @"Users.db"));
 			Console.WriteLine("Server listening on " + (listener as UdpConnectionListener).EndPoint);
 			listener.NewConnection += NewConnectionHandler;
 			listener.Start();
@@ -247,6 +249,7 @@ namespace HazelUDPTestSuperServer
                                         //TODO: Check here if user exist and password correct
                                         //Get users collection
                                         var col = db.GetCollection<Users>("users");
+                                        Console.WriteLine("COMMAND RECIEVED: " + HMessageReceived.Answer);
                                         //Parse HMessageReceived
                                         string[] words = HMessageReceived.Answer.Split(';');
                                         //words[0] = Login; words[1] = Password
@@ -362,7 +365,21 @@ namespace HazelUDPTestSuperServer
 				}
 			}
 			args.Recycle();
-		}
+        }
+        
+        /// <summary>
+        /// Return path of main assembly
+        /// </summary>
+        public static string AssemblyDirectory
+        {
+            get
+            {
+                string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+                UriBuilder uri = new UriBuilder(codeBase);
+                string path = Uri.UnescapeDataString(uri.Path);
+                return Path.GetDirectoryName(path);
+            }
+        }
 
         /// <summary>
         /// Shutdown this instance.
