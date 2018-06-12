@@ -58,6 +58,7 @@ namespace HazelUDPTestClient
         static Boolean DEBUG = true;
         static String UID = String.Empty;
         static String AvatarName = String.Empty;
+        static String AvatarPassword = String.Empty;
 
         private static Vector3 lastPosition = new Vector3(0, 0, 0);
         private static Quaternion lastRotation = new Quaternion(1, 1, 1, 1);
@@ -83,34 +84,10 @@ namespace HazelUDPTestClient
 
 				//Send single login message
                 {
-                    //Create LOGIN message
                     //Login
-                    String UIDBuffer = "Vytek75;test1234!";
-                    Console.WriteLine("AvatarName:" + UIDBuffer.Split(';')[0]);
-                    AvatarName = UIDBuffer.Split(';')[0];
-
-                    //Encode FlatBuffer
-                    //Create flatbuffer class
-                    FlatBufferBuilder fbb = new FlatBufferBuilder(1);
-
-                    StringOffset SOUIDBuffer = fbb.CreateString(UIDBuffer);
-
-                    HazelMessage.HMessage.StartHMessage(fbb);
-                    HazelMessage.HMessage.AddCommand(fbb, (sbyte)CommandType.LOGIN);
-                    HazelMessage.HMessage.AddAnswer(fbb, SOUIDBuffer);
-                    var offset = HazelMessage.HMessage.EndHMessage(fbb);
-                    HazelMessage.HMessage.FinishHMessageBuffer(fbb, offset);
-                    //Reply to Client
-                    using (var ms = new MemoryStream(fbb.DataBuffer.Data, fbb.DataBuffer.Position, fbb.Offset))
-                    {
-                        //Add type!
-                        //https://stackoverflow.com/questions/5591329/c-sharp-how-to-add-byte-to-byte-array
-                        byte[] newArray = new byte[ms.ToArray().Length + 1];
-                        ms.ToArray().CopyTo(newArray, 1);
-                        newArray[0] = (byte)SendType.SENDTOSERVER;
-                        //SEND RELIABLE UDP
-                        connection.SendBytes(newArray, SendOption.Reliable);
-                    }
+                    AvatarName = "Vytek75";
+                    AvatarPassword = "test1234!";
+                    SendMessageToServer((sbyte)CommandType.LOGIN);
                     Console.WriteLine("Send to: " + connection.EndPoint.ToString());
                 }
 
@@ -348,6 +325,44 @@ namespace HazelUDPTestClient
                 {
                     Console.WriteLine("Message sent!");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Sends the message to server.
+        /// </summary>
+        /// <param name="Command">Command.</param>
+        public static void SendMessageToServer(CommandType Command)
+        {
+            //Encode FlatBuffer
+            //Create flatbuffer class
+            FlatBufferBuilder fbb = new FlatBufferBuilder(1);
+
+            //Insert login and password
+            string UIDBuffer = AvatarName + ";" + AvatarPassword;
+            Console.WriteLine("AvatarName:" + UIDBuffer.Split(';')[0]);
+            //https://stackoverflow.com/questions/2235683/easiest-way-to-parse-a-comma-delimited-string-to-some-kind-of-object-i-can-loop
+            //StringOffset SOUIDBuffer = fbb.CreateString(String.Empty);
+            StringOffset SOUIDBuffer = fbb.CreateString(UIDBuffer);
+
+            HazelMessage.HMessage.StartHMessage(fbb);
+            HazelMessage.HMessage.AddCommand(fbb, (sbyte)Command);
+            HazelMessage.HMessage.AddAnswer(fbb, SOUIDBuffer);
+            var offset = HazelMessage.HMessage.EndHMessage(fbb);
+            HazelMessage.HMessage.FinishHMessageBuffer(fbb, offset);
+            //Reply to Client
+            using (var ms = new MemoryStream(fbb.DataBuffer.Data, fbb.DataBuffer.Position, fbb.Offset))
+            {
+                //Add type!
+                //https://stackoverflow.com/questions/5591329/c-sharp-how-to-add-byte-to-byte-array
+                byte[] newArray = new byte[ms.ToArray().Length + 1];
+                ms.ToArray().CopyTo(newArray, 1);
+                newArray[0] = (byte)SendType.SENDTOSERVER;
+                connection.SendBytes(newArray, SendOption.Reliable);
+            }
+            if (DEBUG)
+            {
+                Console.WriteLine("Message sent!");
             }
         }
 	}
