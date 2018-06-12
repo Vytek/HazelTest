@@ -51,6 +51,9 @@ namespace HazelUDPTestClient
             DISCONNECTEDCLIENT = 1
         }
 
+        /// <summary>
+        /// Initial configuation
+        /// </summary>
         static Connection connection;
         static Boolean DEBUG = true;
         static String UID = String.Empty;
@@ -59,6 +62,10 @@ namespace HazelUDPTestClient
         private static Vector3 lastPosition = new Vector3(0, 0, 0);
         private static Quaternion lastRotation = new Quaternion(1, 1, 1, 1);
 
+        /// <summary>
+        /// The entry point of the program, where the program control starts and ends.
+        /// </summary>
+        /// <param name="args">The command-line arguments.</param>
 		public static void Main(string[] args)
 		{
 			NetworkEndPoint endPoint = new NetworkEndPoint("127.0.0.1", 4296);
@@ -78,7 +85,9 @@ namespace HazelUDPTestClient
                 {
                     //Create LOGIN message
                     //Login
-                    String UIDBuffer = "Vytek75;test1234!"; 
+                    String UIDBuffer = "Vytek75;test1234!";
+                    Console.WriteLine("AvatarName:" + UIDBuffer.Split(';')[0]);
+                    AvatarName = UIDBuffer.Split(';')[0];
 
                     //Encode FlatBuffer
                     //Create flatbuffer class
@@ -140,6 +149,11 @@ namespace HazelUDPTestClient
 			}
 		}
 
+        /// <summary>
+        /// Datas the received.
+        /// </summary>
+        /// <param name="sender">Sender.</param>
+        /// <param name="args">Arguments.</param>
 		private static void DataReceived(object sender, DataReceivedEventArgs args)
 		{
 			Console.WriteLine("Received (" + string.Join<byte>(", ", args.Bytes) + ") from " + connection.EndPoint.ToString());
@@ -226,24 +240,29 @@ namespace HazelUDPTestClient
 			args.Recycle();
 		}
 
+        /// <summary>
+        /// Servers the disconnect handler.
+        /// </summary>
+        /// <param name="sender">Sender.</param>
+        /// <param name="args">Arguments.</param>
 		private static void ServerDisconnectHandler(object sender, DisconnectedEventArgs args)
 		{
 			Connection connection = (Connection)sender;
-
 			Console.WriteLine("Server connection at " + connection.EndPoint + " lost");
-
 			connection = null;
-
 			args.Recycle();
 		}
 
         /// <summary>
-        /// SendMessage
+        /// Sends the message.
         /// </summary>
-        /// <param name="Type"></param>
-        /// <param name="IDObject"></param>
-        /// <param name="Pos"></param>
-        /// <param name="Rot"></param>
+        /// <param name="SType">ST ype.</param>
+        /// <param name="Type">Type.</param>
+        /// <param name="IDObject">IDObject.</param>
+        /// <param name="OwnerPlayer">Owner player.</param>
+        /// <param name="isKine">If set to <c>true</c> is kinematic.</param>
+        /// <param name="Pos">Position.</param>
+        /// <param name="Rot">Rotation.</param>
         public static void SendMessage(SendType SType, PacketId Type, ushort IDObject, string OwnerPlayer, bool isKine, Vector3 Pos, Quaternion Rot)
         {
             sbyte TypeBuffer = 0;
