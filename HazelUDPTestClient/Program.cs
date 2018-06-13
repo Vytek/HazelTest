@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FlatBuffers;
+using RestSharp;
 
 using Hazel;
 using Hazel.Udp;
@@ -16,7 +17,7 @@ using System.IO;
 
 namespace HazelUDPTestClient
 {
-	class ClientExample 
+    class ClientExample
     {
         /// <summary>
         /// Send type.
@@ -68,21 +69,21 @@ namespace HazelUDPTestClient
         /// </summary>
         /// <param name="args">The command-line arguments.</param>
 		public static void Main(string[] args)
-		{
-			NetworkEndPoint endPoint = new NetworkEndPoint("127.0.0.1", 4296);
+        {
+            NetworkEndPoint endPoint = new NetworkEndPoint("127.0.0.1", 4296);
 
-			connection = new UdpClientConnection(endPoint);
+            connection = new UdpClientConnection(endPoint);
 
-			connection.DataReceived += DataReceived;
-			connection.Disconnected += ServerDisconnectHandler;
+            connection.DataReceived += DataReceived;
+            connection.Disconnected += ServerDisconnectHandler;
 
-			try
-			{
-				Console.WriteLine("Connecting!");
+            try
+            {
+                Console.WriteLine("Connecting!");
 
-				connection.Connect();
+                connection.Connect();
 
-				//Send single login message
+                //Send single login message
                 {
                     //Login
                     AvatarName = "Vytek75";
@@ -105,26 +106,21 @@ namespace HazelUDPTestClient
                     if ((cki.Modifiers & ConsoleModifiers.Shift) != 0) Console.Write("SHIFT+");
                     if ((cki.Modifiers & ConsoleModifiers.Control) != 0) Console.Write("CTL+");
                     Console.WriteLine(cki.Key.ToString());
+                    if (cki.Key.ToString().ToLower() == "r") {
+                        RezObject("Rez My GLTF File");
+                    }
                 } while (cki.Key != ConsoleKey.Escape);
 
                 connection.Close();
                 Environment.Exit(0);
-
-                /*
-                Console.WriteLine("Press any key to continue...");
-				Console.ReadKey();
-				//https://msdn.microsoft.com/it-it/library/471w8d85(v=vs.110).aspx?cs-save-lang=1&cs-lang=cpp#code-snippet-3
-				connection.Close();
-				Environment.Exit(0);
-				*/
-			}
-			catch (Hazel.HazelException ex)
-			{
-				Console.Error.WriteLine("Error: " + ex.Message + " from " + ex.Source);
-				connection.Close();
-				Environment.Exit(1);
-			}
-		}
+            }
+            catch (Hazel.HazelException ex)
+            {
+                Console.Error.WriteLine("Error: " + ex.Message + " from " + ex.Source);
+                connection.Close();
+                Environment.Exit(1);
+            }
+        }
 
         /// <summary>
         /// Datas the received.
@@ -132,8 +128,8 @@ namespace HazelUDPTestClient
         /// <param name="sender">Sender.</param>
         /// <param name="args">Arguments.</param>
 		private static void DataReceived(object sender, DataReceivedEventArgs args)
-		{
-			Console.WriteLine("Received (" + string.Join<byte>(", ", args.Bytes) + ") from " + connection.EndPoint.ToString());
+        {
+            Console.WriteLine("Received (" + string.Join<byte>(", ", args.Bytes) + ") from " + connection.EndPoint.ToString());
             //Decode parse received data
             //Remove first byte (type)
             //https://stackoverflow.com/questions/31550484/faster-code-to-remove-first-elements-from-byte-array
@@ -182,40 +178,41 @@ namespace HazelUDPTestClient
                 {
                     Console.WriteLine("OBJECT SPAWN");
                 }
-            } else if (STypeBuffer == (byte) SendType.SENDTOSERVER)
+            }
+            else if (STypeBuffer == (byte)SendType.SENDTOSERVER)
+            {
+                HazelMessage.HMessage HMessageReceived = HazelMessage.HMessage.GetRootAsHMessage(bb);
+                if ((sbyte)CommandType.LOGIN == HMessageReceived.Command)
                 {
-                    HazelMessage.HMessage HMessageReceived = HazelMessage.HMessage.GetRootAsHMessage(bb);
-                    if ((sbyte)CommandType.LOGIN == HMessageReceived.Command)
+                    if (HMessageReceived.Answer != String.Empty)
                     {
-                        if (HMessageReceived.Answer != String.Empty)
-                        {
-                            UID = HMessageReceived.Answer;
-                            //Set UID for Your Avatar ME
-                            //UnityMainThreadDispatcher.Instance().Enqueue(SetUIDInMainThread(HMessageReceived.Answer));
-                            Console.WriteLine("UID RECEIVED: " + HMessageReceived.Answer);
-                            //PLAYER_JOIN MESSAGE (SENDTOOTHER)
-                            SendMessage(SendType.SENDTOOTHER, PacketId.PLAYER_JOIN, 0, UID + ";" + AvatarName, true, lastPosition, lastRotation);
-                            //TO DO: Using Reliable UDP??
-                        }
-                        else
-                        {
-                            Console.WriteLine("UID RECEIVED is EMPTY (NOT VALID PASSWORD): " + HMessageReceived.Answer);
-                            //Disconnect
-                            if (connection != null)
-                            {
-                                Console.WriteLine("DisConnecting from: " + connection.EndPoint.ToString());
-                                connection.Close();
-                            }
-                        }
+                        UID = HMessageReceived.Answer;
+                        //Set UID for Your Avatar ME
+                        //UnityMainThreadDispatcher.Instance().Enqueue(SetUIDInMainThread(HMessageReceived.Answer));
+                        Console.WriteLine("UID RECEIVED: " + HMessageReceived.Answer);
+                        //PLAYER_JOIN MESSAGE (SENDTOOTHER)
+                        SendMessage(SendType.SENDTOOTHER, PacketId.PLAYER_JOIN, 0, UID + ";" + AvatarName, true, lastPosition, lastRotation);
+                        //TO DO: Using Reliable UDP??
                     }
-                    else if ((sbyte)CommandType.DISCONNECTEDCLIENT == HMessageReceived.Command)
+                    else
                     {
-                        //Debug Disconnected UID
-                        Console.WriteLine("UID RECEIVED and TO DESTROY: " + HMessageReceived.Answer);
+                        Console.WriteLine("UID RECEIVED is EMPTY (NOT VALID PASSWORD): " + HMessageReceived.Answer);
+                        //Disconnect
+                        if (connection != null)
+                        {
+                            Console.WriteLine("DisConnecting from: " + connection.EndPoint.ToString());
+                            connection.Close();
+                        }
                     }
                 }
-			args.Recycle();
-		}
+                else if ((sbyte)CommandType.DISCONNECTEDCLIENT == HMessageReceived.Command)
+                {
+                    //Debug Disconnected UID
+                    Console.WriteLine("UID RECEIVED and TO DESTROY: " + HMessageReceived.Answer);
+                }
+            }
+            args.Recycle();
+        }
 
         /// <summary>
         /// Servers the disconnect handler.
@@ -223,17 +220,36 @@ namespace HazelUDPTestClient
         /// <param name="sender">Sender.</param>
         /// <param name="args">Arguments.</param>
 		private static void ServerDisconnectHandler(object sender, DisconnectedEventArgs args)
-		{
-			Connection connection = (Connection)sender;
-			Console.WriteLine("Server connection at " + connection.EndPoint + " lost");
-			connection = null;
-			args.Recycle();
-		}
+        {
+            Connection connection = (Connection)sender;
+            Console.WriteLine("Server connection at " + connection.EndPoint + " lost");
+            connection = null;
+            args.Recycle();
+        }
+
+        /// <summary>
+        /// Rezs the object.
+        /// </summary>
+        /// <param name="ObjectHASHIPFS">Object hash ipfs.</param>
+        private static void RezObject(String ObjectHASHIPFS)
+        {
+            Console.WriteLine(ObjectHASHIPFS);
+            var client = new RestClient();
+            client.BaseUrl = new Uri("https://jsonplaceholder.typicode.com/");
+            var request = new RestRequest("users/{id}", Method.GET);
+            //request.AddParameter("name", "value"); // adds to POST or URL querystring based on Method
+            request.AddUrlSegment("id", "1"); // replaces matching token in request.Resource
+            // execute the request
+            IRestResponse response = client.Execute(request);
+            var content = response.Content; // raw content as string
+            Console.WriteLine(content);
+
+        }
 
         /// <summary>
         /// Sends the message.
         /// </summary>
-        /// <param name="SType">ST ype.</param>
+        /// <param name="SType">SType.</param>
         /// <param name="Type">Type.</param>
         /// <param name="IDObject">IDObject.</param>
         /// <param name="OwnerPlayer">Owner player.</param>
@@ -365,5 +381,5 @@ namespace HazelUDPTestClient
                 Console.WriteLine("Message sent!");
             }
         }
-	}
+    }
 }
