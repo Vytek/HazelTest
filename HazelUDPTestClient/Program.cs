@@ -80,7 +80,6 @@ namespace HazelUDPTestClient
             try
             {
                 Console.WriteLine("Connecting!");
-
                 connection.Connect();
 
                 //Send single login message
@@ -235,15 +234,15 @@ namespace HazelUDPTestClient
         {
             Console.WriteLine(ObjectHASHIPFS);
             var client = new RestClient();
-            client.BaseUrl = new Uri("https://jsonplaceholder.typicode.com/");
-            var request = new RestRequest("users/{id}", Method.GET);
+            client.BaseUrl = new Uri("http://localhost:5001/api/");
+            var request = new RestRequest("v0/id", Method.GET);
             //request.AddParameter("name", "value"); // adds to POST or URL querystring based on Method
-            request.AddUrlSegment("id", "1"); // replaces matching token in request.Resource
+            //request.AddUrlSegment("id", "1"); // replaces matching token in request.Resource
             // execute the request
             IRestResponse response = client.Execute(request);
             var content = response.Content; // raw content as string
+            var contenttype = response.ContentType;
             Console.WriteLine(content);
-
         }
 
         /// <summary>
