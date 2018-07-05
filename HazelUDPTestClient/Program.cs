@@ -60,6 +60,7 @@ namespace HazelUDPTestClient
         static String UID = String.Empty;
         static String AvatarName = String.Empty;
         static String AvatarPassword = String.Empty;
+        static Dictionary<int, string> DictObjects = new Dictionary<int, string>();
 
         private static Vector3 lastPosition = new Vector3(0, 0, 0);
         private static Quaternion lastRotation = new Quaternion(1, 1, 1, 1);
@@ -106,7 +107,8 @@ namespace HazelUDPTestClient
                     if ((cki.Modifiers & ConsoleModifiers.Control) != 0) Console.Write("CTL+");
                     Console.WriteLine(cki.Key.ToString());
                     if (cki.Key.ToString().ToLower() == "r") {
-                        RezObject("Rez My GLTF File");
+                        //https://gateway.ipfs.io/ipfs/QmerSDvd9PTgcbTAz68rL1ujeCZakhdLeAUpdcfdkyhqyx
+                        RezObject("QmerSDvd9PTgcbTAz68rL1ujeCZakhdLeAUpdcfdkyhqyx", true);
                     }
                 } while (cki.Key != ConsoleKey.Escape);
 
@@ -176,6 +178,8 @@ namespace HazelUDPTestClient
                 else if ((byte)PacketId.OBJECT_SPAWN == ObjectReceived.Type)
                 {
                     Console.WriteLine("OBJECT SPAWN");
+                    //Rez Object Recieved
+                    RezObject(ObjectReceived.Owner.Split(';')[1], false);
                 }
             }
             else if (STypeBuffer == (byte)SendType.SENDTOSERVER)
@@ -229,10 +233,11 @@ namespace HazelUDPTestClient
         /// <summary>
         /// Rezs the object.
         /// </summary>
-        /// <param name="ObjectHASHIPFS">Object hash ipfs.</param>
-        private static void RezObject(String ObjectHASHIPFS)
+        /// <param name="ObjectHASHIPFS">Object hashipfs.</param>
+        /// <param name="Request">If set to <c>true</c> request.</param>
+        private static void RezObject(String ObjectHASHIPFS, Boolean Request)
         {
-            Console.WriteLine(ObjectHASHIPFS);
+            Console.WriteLine("IPFS Object hash: "+ObjectHASHIPFS);
             var client = new RestClient();
             client.BaseUrl = new Uri("http://localhost:5001/api/");
             var request = new RestRequest("v0/id", Method.GET);
@@ -240,9 +245,43 @@ namespace HazelUDPTestClient
             //request.AddUrlSegment("id", "1"); // replaces matching token in request.Resource
             // execute the request
             IRestResponse response = client.Execute(request);
-            var content = response.Content; // raw content as string
-            var contenttype = response.ContentType;
-            Console.WriteLine(content);
+            if (!String.IsNullOrEmpty(response.Content)) {
+                var content = response.Content; // raw content as string
+                var contenttype = response.ContentType;
+                Console.WriteLine(content);
+                Console.WriteLine(contenttype);
+                //Request file from IPFS
+                var request_ipfs = new RestRequest("v0/cat?arg="+ObjectHASHIPFS, Method.GET);
+                IRestResponse response_ipfs = client.Execute(request_ipfs);
+                //Instance it in Unity3D Engine
+                if (!String.IsNullOrEmpty(response_ipfs.Content)) {
+                    var content_ipfs = response_ipfs.Content; // raw content as string
+                    var contenttype_ipfs = response_ipfs.ContentType;
+                    Console.WriteLine(content_ipfs);
+                    Console.WriteLine(contenttype_ipfs);
+                    //Add Object to internal list in client
+                    ushort UIDObject;
+                    if (DictObjects.Count == 0)
+                    {
+                        UIDObject = 0;
+                    }
+                    else
+                    {
+                        UIDObject = (ushort)(DictObjects.Count + 1);
+                    }
+                    DictObjects.Add(UIDObject, ObjectHASHIPFS);
+                    if (Request)
+                    {
+                        //Send command to rez in others clients
+                        SendMessage(SendType.SENDTOOTHER, PacketId.OBJECT_SPAWN, UIDObject, UID + ";" + ObjectHASHIPFS, true, lastPosition, lastRotation);
+                    }
+                } else {
+                    Console.WriteLine("ERROR: IPFS hash NOT correct or other problem!");  
+                }                    
+            } else {
+                Console.WriteLine("ERROR: IPFS is NOT active!");
+            }
+
         }
 
         /// <summary>
