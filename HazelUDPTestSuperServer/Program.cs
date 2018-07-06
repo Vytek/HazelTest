@@ -48,6 +48,20 @@ namespace HazelUDPTestSuperServer
 		}
 
         /// <summary>
+        /// Packet identifier.
+        /// </summary>
+        public enum PacketId : sbyte
+        {
+            PLAYER_JOIN = 0,
+            OBJECT_MOVE = 1,
+            PLAYER_SPAWN = 2,
+            OBJECT_SPAWN = 3,
+            PLAYER_MOVE = 4,
+            MESSAGE_SERVER = 5,
+            OBJECT_UNSPAWN = 6
+        }
+
+        /// <summary>
         /// Command type.
         /// </summary>
 		public enum CommandType : sbyte
@@ -309,6 +323,7 @@ namespace HazelUDPTestSuperServer
                             item.ClientConnected.SendBytes(newArray, item.SOClientConnected);
                         }
                         Console.WriteLine("Send to: " + item.ClientConnected.EndPoint.ToString());
+                        //HERE SEND TO ALL CLIENTS OBJECTS DB
                     }
                 }
             }

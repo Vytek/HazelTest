@@ -40,7 +40,8 @@ namespace HazelUDPTestClient
             PLAYER_SPAWN = 2,
             OBJECT_SPAWN = 3,
             PLAYER_MOVE = 4,
-            MESSAGE_SERVER = 5
+            MESSAGE_SERVER = 5,
+            OBJECT_UNSPAWN = 6
         }
 
         /// <summary>
