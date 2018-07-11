@@ -109,7 +109,12 @@ namespace HazelUDPTestClient
                     Console.WriteLine(cki.Key.ToString());
                     if (cki.Key.ToString().ToLower() == "r") {
                         //https://gateway.ipfs.io/ipfs/QmerSDvd9PTgcbTAz68rL1ujeCZakhdLeAUpdcfdkyhqyx
-                        RezObject("QmerSDvd9PTgcbTAz68rL1ujeCZakhdLeAUpdcfdkyhqyx", true);
+                        RezObject("QmerSDvd9PTgcbTAz68rL1ujeCZakhdLeAUpdcfdkyhqyx", UID, true);
+                    }
+                    if (cki.Key.ToString().ToLower() == "u")
+                    {
+                        //https://gateway.ipfs.io/ipfs/QmerSDvd9PTgcbTAz68rL1ujeCZakhdLeAUpdcfdkyhqyx
+                        DeRezObject("QmerSDvd9PTgcbTAz68rL1ujeCZakhdLeAUpdcfdkyhqyx", UID, true, (ushort)DictObjects.Count);
                     }
                 } while (cki.Key != ConsoleKey.Escape);
 
@@ -180,7 +185,13 @@ namespace HazelUDPTestClient
                 {
                     Console.WriteLine("OBJECT SPAWN");
                     //Rez Object Recieved
-                    RezObject(ObjectReceived.Owner.Split(';')[1], false);
+                    RezObject(ObjectReceived.Owner.Split(';')[1], ObjectReceived.Owner.Split(';')[0], false);
+                }
+                else if ((byte)PacketId.OBJECT_UNSPAWN == ObjectReceived.Type)
+                {
+                    Console.WriteLine("OBJECT UNSPAWN");
+                    //De Rez Object Recieved
+                    DeRezObject(ObjectReceived.Owner.Split(';')[1], ObjectReceived.Owner.Split(';')[0], false, ObjectReceived.ID);
                 }
             }
             else if (STypeBuffer == (byte)SendType.SENDTOSERVER)
@@ -236,7 +247,7 @@ namespace HazelUDPTestClient
         /// </summary>
         /// <param name="ObjectHASHIPFS">Object hashipfs.</param>
         /// <param name="Request">If set to <c>true</c> request.</param>
-        private static void RezObject(String ObjectHASHIPFS, Boolean Request)
+        private static void RezObject(String ObjectHASHIPFS, String vUID, Boolean Request)
         {
             Console.WriteLine("IPFS Object hash: "+ObjectHASHIPFS);
             var client = new RestClient();
@@ -274,7 +285,7 @@ namespace HazelUDPTestClient
                     if (Request)
                     {
                         //Send command to rez in others clients
-                        SendMessage(SendType.SENDTOOTHER, PacketId.OBJECT_SPAWN, UIDObject, UID + ";" + ObjectHASHIPFS, true, lastPosition, lastRotation);
+                        SendMessage(SendType.SENDTOOTHER, PacketId.OBJECT_SPAWN, UIDObject, vUID + ";" + ObjectHASHIPFS, true, lastPosition, lastRotation);
                     }
                 } else {
                     Console.WriteLine("ERROR: IPFS hash NOT correct or other problem!");  
@@ -283,6 +294,31 @@ namespace HazelUDPTestClient
                 Console.WriteLine("ERROR: IPFS is NOT active!");
             }
 
+        }
+
+        /// <summary>
+        /// Des the rez object.
+        /// </summary>
+        /// <param name="ObjectHASHIPFS">Object hashipfs.</param>
+        /// <param name="Request">If set to <c>true</c> request.</param>
+        private static void DeRezObject(String ObjectHASHIPFS, String vUID, Boolean Request, ushort UIDObject)
+        {
+            if (DictObjects.Count != 0)
+            {
+                if (DictObjects.Contains(new KeyValuePair<int, string>(UIDObject, vUID+";"+ObjectHASHIPFS)))
+                {
+                    Console.WriteLine("UID: "+vUID.ToString());
+                    Console.WriteLine("UIDOject: " + UIDObject.ToString());
+                    Console.WriteLine("HASHIPFS: "+ObjectHASHIPFS);
+                    //Remove Object/Remove GameObject
+                    DictObjects.Remove(UIDObject);
+                    if (Request)
+                    {
+                        //Send command to rez in others clients
+                        SendMessage(SendType.SENDTOOTHER, PacketId.OBJECT_UNSPAWN, UIDObject, vUID + ";" + ObjectHASHIPFS, true, lastPosition, lastRotation);
+                    }
+                }
+            }
         }
 
         /// <summary>
