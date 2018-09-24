@@ -72,7 +72,7 @@ namespace HazelUDPTestClient
         /// <param name="args">The command-line arguments.</param>
 		public static void Main(string[] args)
         {
-            NetworkEndPoint endPoint = new NetworkEndPoint("127.0.0.1", 4296);
+            NetworkEndPoint endPoint = new NetworkEndPoint("45.77.55.225", 4296);
 
             connection = new UdpClientConnection(endPoint);
 
