@@ -45,6 +45,9 @@
     <Reference Include="RestSharp">
       <HintPath>..\packages\RestSharp.106.3.1\lib\net452\RestSharp.dll</HintPath>
     </Reference>
+    <Reference Include="INIFileParser">
+      <HintPath>..\packages\ini-parser.3.4.0\lib\net20\INIFileParser.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />

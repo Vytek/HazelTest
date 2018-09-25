@@ -15,6 +15,9 @@ using HazelTest;
 using HazelMessage;
 using System.IO;
 
+using IniParser;
+using IniParser.Model;
+
 namespace HazelUDPTestClient
 {
     class ClientExample
@@ -61,6 +64,8 @@ namespace HazelUDPTestClient
         static String UID = String.Empty;
         static String AvatarName = String.Empty;
         static String AvatarPassword = String.Empty;
+        static String ServerIP = String.Empty;
+        static int ServerPort = 4296;
         static Dictionary<int, string> DictObjects = new Dictionary<int, string>();
 
         private static Vector3 lastPosition = new Vector3(0, 0, 0);
@@ -72,7 +77,20 @@ namespace HazelUDPTestClient
         /// <param name="args">The command-line arguments.</param>
 		public static void Main(string[] args)
         {
-            NetworkEndPoint endPoint = new NetworkEndPoint("45.77.55.225", 4296);
+            //Read Initial Config of Client
+            //Create an instance of a ini file parser
+            FileIniDataParser fileIniData = new FileIniDataParser();
+            //Parse the ini file
+            IniData parsedData = fileIniData.ReadFile("HazelUDPTestClient.ini");
+
+            ServerIP = parsedData["ServerConfig"]["ServerIP"];
+            //https://www.cambiaresearch.com/articles/68/convert-string-to-int-in-csharp
+            ServerPort = System.Convert.ToInt32(parsedData["ServerConfig"]["ServerPort"]);
+
+            Console.WriteLine("ServerIP: "+ parsedData["ServerConfig"]["ServerIP"]);
+            Console.WriteLine("ServerPort: " + parsedData["ServerConfig"]["ServerPort"]);
+
+            NetworkEndPoint endPoint = new NetworkEndPoint(ServerIP, ServerPort, IPMode.IPv4);
 
             connection = new UdpClientConnection(endPoint);
 
@@ -87,8 +105,10 @@ namespace HazelUDPTestClient
                 //Send single login message
                 {
                     //Login
-                    AvatarName = "Vytek75";
-                    AvatarPassword = "test1234!";
+                    //AvatarName = "Vytek75";
+                    AvatarName = parsedData["User"]["UserLogin"];
+                    //AvatarPassword = "test1234!";
+                    AvatarPassword = parsedData["User"]["UserPassword"];
                     SendMessageToServer((sbyte)CommandType.LOGIN);
                     Console.WriteLine("Send to: " + connection.EndPoint.ToString());
                 }
