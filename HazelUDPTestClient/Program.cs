@@ -301,11 +301,11 @@ namespace HazelUDPTestClient
                     {
                         UIDObject = (ushort)(DictObjects.Count + 1);
                     }
-                    DictObjects.Add(UIDObject, ObjectHASHIPFS);
+                    DictObjects.Add(UIDObject, AvatarName + ";" + ObjectHASHIPFS);
                     if (Request)
                     {
                         //Send command to rez in others clients
-                        SendMessage(SendType.SENDTOOTHER, PacketId.OBJECT_SPAWN, UIDObject, vUID + ";" + ObjectHASHIPFS, true, lastPosition, lastRotation);
+                        SendMessage(SendType.SENDTOOTHER, PacketId.OBJECT_SPAWN, UIDObject, AvatarName + ";" + ObjectHASHIPFS, true, lastPosition, lastRotation);
                     }
                 } else {
                     Console.WriteLine("ERROR: IPFS hash NOT correct or other problem!");  
@@ -325,7 +325,7 @@ namespace HazelUDPTestClient
         {
             if (DictObjects.Count != 0)
             {
-                if (DictObjects.Contains(new KeyValuePair<int, string>(UIDObject, vUID+";"+ObjectHASHIPFS)))
+                if (DictObjects.Contains(new KeyValuePair<int, string>(UIDObject, AvatarName+";"+ObjectHASHIPFS)))
                 {
                     Console.WriteLine("UID: "+vUID.ToString());
                     Console.WriteLine("UIDOject: " + UIDObject.ToString());
@@ -335,7 +335,7 @@ namespace HazelUDPTestClient
                     if (Request)
                     {
                         //Send command to rez in others clients
-                        SendMessage(SendType.SENDTOOTHER, PacketId.OBJECT_UNSPAWN, UIDObject, vUID + ";" + ObjectHASHIPFS, true, lastPosition, lastRotation);
+                        SendMessage(SendType.SENDTOOTHER, PacketId.OBJECT_UNSPAWN, UIDObject, AvatarName + ";" + ObjectHASHIPFS, true, lastPosition, lastRotation);
                     }
                 }
             }
