@@ -22,7 +22,7 @@ namespace HazelUDPTestSuperServer
     public class Server
 	{
         public int portNumber = 4296;
-
+        public static bool DEBUG = true;
 		public bool Running { get; private set; }
 
         /// <summary>
@@ -34,6 +34,24 @@ namespace HazelUDPTestSuperServer
             public string UserName { get; set; }
             public string UserPassword { get; set; }
             public bool IsActive { get; set; }
+        }
+
+        /// <summary>
+        /// Objects class.
+        /// </summary>
+        public class Objects
+        {
+            public string InternalId { get; set; }
+            public sbyte ID { get; set; }
+            public string UID { get; set; }
+            public bool isKine { get; set; }
+            public float PosX { get; set; }
+            public float PosY { get; set; }
+            public float PosZ { get; set; }
+            public float RotX { get; set; }
+            public float RotY { get; set; }
+            public float RotZ { get; set; }
+            public float RotW { get; set; }
         }
 
         /// <summary>
@@ -89,7 +107,7 @@ namespace HazelUDPTestSuperServer
         static ManualResetEvent _quitEvent = new ManualResetEvent(false);
         
         //LiteDB connection
-        static LiteDatabase db = new LiteDatabase(Path.Combine(AssemblyDirectory, @"Users.db"));
+        static LiteDatabase db = new LiteDatabase(Path.Combine(AssemblyDirectory, @"UsersObjects.db"));
 
         /// <summary>
         /// Start this instance.
@@ -226,6 +244,42 @@ namespace HazelUDPTestSuperServer
                     {
                         //BROADCAST (SENDTOOTHER)
                         Console.WriteLine("BROADCAST (SENDTOOTHER)");
+                        //Save data to Objects DB
+                        Console.WriteLine("SAVE DATA TO OBJECTS DB");
+                        //
+                        var col = db.GetCollection<Objects>("objects");
+                        //Parser Message
+                        //Remove first byte (type)
+                        //https://stackoverflow.com/questions/31550484/faster-code-to-remove-first-elements-from-byte-array
+                        byte STypeBuffer = item.MessageBytes[0];
+                        byte[] NewBufferReceiver = new byte[item.MessageBytes.Length - 1];
+                        Array.Copy(item.MessageBytes, 1, NewBufferReceiver, 0, NewBufferReceiver.Length);
+                        ByteBuffer bb = new ByteBuffer(NewBufferReceiver);
+                        HazelTest.Object ObjectReceived = HazelTest.Object.GetRootAsObject(bb);
+                        if (Server.DEBUG)
+                        {
+                            Console.WriteLine("RECEIVED DATA: ");
+                            Console.WriteLine("IDObject RECEIVED: " + ObjectReceived.ID);
+                            Console.WriteLine("UID RECEIVED; " + ObjectReceived.Owner);
+                            Console.WriteLine("isKinematic: " + ObjectReceived.IsKine);
+                            Console.WriteLine("POS RECEIVED: " + ObjectReceived.Pos.X + ", " + ObjectReceived.Pos.Y + ", " + ObjectReceived.Pos.Z);
+                            Console.WriteLine("ROT RECEIVED: " + ObjectReceived.Rot.X + ", " + ObjectReceived.Rot.Y + ", " + ObjectReceived.Rot.Z + ", " + ObjectReceived.Rot.W);
+                        }
+                        //var ReceiveMessageFromGameObjectBuffer = new ReceiveMessageFromGameObject(); //NOT USED!
+                        sbyte TypeBuffer = ObjectReceived.Type;
+
+                        if ((byte)PacketId.OBJECT_SPAWN == ObjectReceived.Type)
+                        {
+                            Console.WriteLine("OBJECT SPAWN");  
+                        }
+                        else if ((byte)PacketId.OBJECT_MOVE == ObjectReceived.Type)
+                        {
+                            Console.WriteLine("OBJECT MOVE");
+                        }
+                        else if ((byte)PacketId.OBJECT_UNSPAWN == ObjectReceived.Type)
+                        {
+                            Console.WriteLine("OBJECT UNSPAWN");
+                        }
                         //Send data received to all other client in List
                         foreach (var conn in Server.clients)
                         {
