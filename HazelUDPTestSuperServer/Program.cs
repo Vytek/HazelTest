@@ -42,7 +42,7 @@ namespace HazelUDPTestSuperServer
         public class Objects
         {
             public string InternalId { get; set; }
-            public sbyte ID { get; set; }
+            public ushort ID { get; set; }
             public string UID { get; set; }
             public bool isKine { get; set; }
             public float PosX { get; set; }
@@ -153,7 +153,7 @@ namespace HazelUDPTestSuperServer
 			Running = true;
 
 			Console.WriteLine("Starting server!");
-            Console.WriteLine("BD file path: " + Path.Combine(AssemblyDirectory, @"Users.db"));
+            Console.WriteLine("BD file path: " + Path.Combine(AssemblyDirectory, @"UsersObjects.db"));
 			Console.WriteLine("Server listening on " + (listener as UdpConnectionListener).EndPoint);
 			listener.NewConnection += NewConnectionHandler;
 			listener.Start();
@@ -268,16 +268,52 @@ namespace HazelUDPTestSuperServer
                         //var ReceiveMessageFromGameObjectBuffer = new ReceiveMessageFromGameObject(); //NOT USED!
                         sbyte TypeBuffer = ObjectReceived.Type;
 
+                        var MVobject = new Objects
+                        {
+                            ID = ObjectReceived.ID,
+                            isKine = ObjectReceived.IsKine,
+                            PosX = ObjectReceived.Pos.X,
+                            PosY = ObjectReceived.Pos.Y,
+                            PosZ = ObjectReceived.Pos.Z,
+                            RotX = ObjectReceived.Rot.X,
+                            RotY = ObjectReceived.Rot.Y,
+                            RotZ = ObjectReceived.Rot.Z,
+                            RotW = ObjectReceived.Rot.W,
+                            UID = ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner
+                        };
+
                         if ((byte)PacketId.OBJECT_SPAWN == ObjectReceived.Type)
                         {
-                            Console.WriteLine("OBJECT SPAWN");  
+                            // Create unique index in Name field
+                            col.EnsureIndex(x => x.UID, true);
+
+                            // Insert new customer document (Id will be auto-incremented)
+                            col.Insert(MVobject);
+                            Console.WriteLine("OBJECT SPAWN SAVED");  
                         }
                         else if ((byte)PacketId.OBJECT_MOVE == ObjectReceived.Type)
                         {
+                            //Check if record exist
+                            if (col.Count(Query.EQ("UID", ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner)) == 1)
+                            {
+                                col.Update(MVobject);
+                            }
+                            else
+                            {
+                                col.Insert(MVobject);
+                            }
                             Console.WriteLine("OBJECT MOVE");
                         }
                         else if ((byte)PacketId.OBJECT_UNSPAWN == ObjectReceived.Type)
                         {
+                            if (col.Count(Query.EQ("UID", ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner)) == 1)
+                            {
+                                col.Delete(Query.EQ("UID", ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner));
+                            }
+                            else
+                            {
+                                Console.WriteLine("OBJECT UNSPAWN NOT IN DB"); ;
+                            }
                             Console.WriteLine("OBJECT UNSPAWN");
                         }
                         //Send data received to all other client in List
