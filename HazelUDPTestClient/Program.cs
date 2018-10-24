@@ -293,11 +293,6 @@ namespace HazelUDPTestClient
                     Console.WriteLine(contenttype_ipfs);
                     //Add Object to internal list in client
                     ushort UIDObject;
-                    if (DictObjects.Count == 0)
-                    {
-                        UIDObject = 0;
-                    }
-                    else
                     {
                         UIDObject = (ushort)(DictObjects.Count + 1);
                     }
