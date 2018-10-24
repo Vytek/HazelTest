@@ -244,9 +244,7 @@ namespace HazelUDPTestSuperServer
                     {
                         //BROADCAST (SENDTOOTHER)
                         Console.WriteLine("BROADCAST (SENDTOOTHER)");
-                        //Save data to Objects DB
-                        Console.WriteLine("SAVE DATA TO OBJECTS DB");
-                        //
+                        //Cal Objects Table
                         var col = db.GetCollection<Objects>("objects");
                         //Parser Message
                         //Remove first byte (type)
@@ -297,10 +295,14 @@ namespace HazelUDPTestSuperServer
                             if (col.Count(Query.EQ("UID", ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner)) == 1)
                             {
                                 col.Update(MVobject);
+                                //Save data to Objects DB
+                                Console.WriteLine("UPDATE OBJECT IN DB");
                             }
                             else
                             {
                                 col.Insert(MVobject);
+                                //Save data to Objects DB
+                                Console.WriteLine("INSERT OBJECT IN DB");
                             }
                             Console.WriteLine("OBJECT MOVE");
                         }
@@ -309,6 +311,8 @@ namespace HazelUDPTestSuperServer
                             if (col.Count(Query.EQ("UID", ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner)) == 1)
                             {
                                 col.Delete(Query.EQ("UID", ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner));
+                                //Save data to Objects DB
+                                Console.WriteLine("DELETE OBJECT FROM DB");
                             }
                             else
                             {

@@ -38,3 +38,8 @@ Thumbs.db
 
 # dotCover
 *.dotCover
+.vs/HazelTest/xs/sqlite3/db.lock
+.vs/HazelTest/xs/sqlite3/storage.ide
+.vs/HazelTest/xs/sqlite3/storage.ide-shm
+.vs/HazelTest/xs/sqlite3/storage.ide-wal
+.vs/HazelTest/xs/UserPrefs.xml
