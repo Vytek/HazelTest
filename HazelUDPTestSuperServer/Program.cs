@@ -16,6 +16,7 @@ using System.Threading;
 using LiteDB;
 using Scrypt;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace HazelUDPTestSuperServer
 {
@@ -153,6 +154,10 @@ namespace HazelUDPTestSuperServer
 			Running = true;
 
 			Console.WriteLine("Starting server!");
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+            string version = fvi.FileVersion;
+            Console.WriteLine("Server Version: " + version);
             Console.WriteLine("BD file path: " + Path.Combine(AssemblyDirectory, @"UsersObjects.db"));
 			Console.WriteLine("Server listening on " + (listener as UdpConnectionListener).EndPoint);
 			listener.NewConnection += NewConnectionHandler;
@@ -188,7 +193,7 @@ namespace HazelUDPTestSuperServer
         /// </summary>
         /// <param name="sender">Sender.</param>
         /// <param name="args">Arguments.</param>
-		private void DataReceivedHandler(object sender, DataReceivedEventArgs args)
+        private void DataReceivedHandler(object sender, Hazel.DataReceivedEventArgs args)
 		{
 			Connection connection = (Connection)sender;
 			Console.WriteLine("Received (" + string.Join<byte>(", ", args.Bytes) + ") from " + connection.EndPoint.ToString());
@@ -266,60 +271,64 @@ namespace HazelUDPTestSuperServer
                         //var ReceiveMessageFromGameObjectBuffer = new ReceiveMessageFromGameObject(); //NOT USED!
                         sbyte TypeBuffer = ObjectReceived.Type;
 
-                        var MVobject = new Objects
+                        //Check if ObjectReceived.ID <> 0
+                        if (ObjectReceived.ID != 0)
                         {
-                            ID = ObjectReceived.ID,
-                            isKine = ObjectReceived.IsKine,
-                            PosX = ObjectReceived.Pos.X,
-                            PosY = ObjectReceived.Pos.Y,
-                            PosZ = ObjectReceived.Pos.Z,
-                            RotX = ObjectReceived.Rot.X,
-                            RotY = ObjectReceived.Rot.Y,
-                            RotZ = ObjectReceived.Rot.Z,
-                            RotW = ObjectReceived.Rot.W,
-                            UID = ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner
-                        };
-
-                        if ((byte)PacketId.OBJECT_SPAWN == ObjectReceived.Type)
-                        {
-                            // Create unique index in Name field
-                            col.EnsureIndex(x => x.UID, true);
-
-                            // Insert new customer document (Id will be auto-incremented)
-                            col.Insert(MVobject);
-                            Console.WriteLine("OBJECT SPAWN SAVED");  
-                        }
-                        else if ((byte)PacketId.OBJECT_MOVE == ObjectReceived.Type)
-                        {
-                            //Check if record exist
-                            if (col.Count(Query.EQ("UID", ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner)) == 1)
+                            var MVobject = new Objects
                             {
-                                col.Update(MVobject);
-                                //Save data to Objects DB
-                                Console.WriteLine("UPDATE OBJECT IN DB");
-                            }
-                            else
+                                ID = ObjectReceived.ID,
+                                isKine = ObjectReceived.IsKine,
+                                PosX = ObjectReceived.Pos.X,
+                                PosY = ObjectReceived.Pos.Y,
+                                PosZ = ObjectReceived.Pos.Z,
+                                RotX = ObjectReceived.Rot.X,
+                                RotY = ObjectReceived.Rot.Y,
+                                RotZ = ObjectReceived.Rot.Z,
+                                RotW = ObjectReceived.Rot.W,
+                                UID = ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner
+                            };
+
+                            if ((byte)PacketId.OBJECT_SPAWN == ObjectReceived.Type)
                             {
+                                // Create unique index in Name field
+                                col.EnsureIndex(x => x.UID, true);
+
+                                // Insert new customer document (Id will be auto-incremented)
                                 col.Insert(MVobject);
-                                //Save data to Objects DB
-                                Console.WriteLine("INSERT OBJECT IN DB");
+                                Console.WriteLine("OBJECT SPAWN SAVED");
                             }
-                            Console.WriteLine("OBJECT MOVE");
-                        }
-                        else if ((byte)PacketId.OBJECT_UNSPAWN == ObjectReceived.Type)
-                        {
-                            if (col.Count(Query.EQ("UID", ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner)) == 1)
+                            else if ((byte)PacketId.OBJECT_MOVE == ObjectReceived.Type)
                             {
-                                col.Delete(Query.EQ("UID", ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner));
-                                //Save data to Objects DB
-                                Console.WriteLine("DELETE OBJECT FROM DB");
+                                //Check if record exist
+                                if (col.Count(Query.EQ("UID", ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner)) == 1)
+                                {
+                                    col.Update(MVobject);
+                                    //Save data to Objects DB
+                                    Console.WriteLine("UPDATE OBJECT IN DB");
+                                }
+                                else
+                                {
+                                    col.Insert(MVobject);
+                                    //Save data to Objects DB
+                                    Console.WriteLine("INSERT OBJECT IN DB");
+                                }
+                                Console.WriteLine("OBJECT MOVE");
                             }
-                            else
+                            else if ((byte)PacketId.OBJECT_UNSPAWN == ObjectReceived.Type)
                             {
-                                Console.WriteLine("OBJECT UNSPAWN NOT IN DB"); ;
+                                if (col.Count(Query.EQ("UID", ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner)) == 1)
+                                {
+                                    col.Delete(Query.EQ("UID", ObjectReceived.ID.ToString() + ";" + ObjectReceived.Owner));
+                                    //Save data to Objects DB
+                                    Console.WriteLine("DELETE OBJECT FROM DB");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("OBJECT UNSPAWN NOT IN DB"); ;
+                                }
+                                Console.WriteLine("OBJECT UNSPAWN");
                             }
-                            Console.WriteLine("OBJECT UNSPAWN");
-                        }
+                        } // END Check ObjectReceived.ID <> 0
                         //Send data received to all other client in List
                         foreach (var conn in Server.clients)
                         {
