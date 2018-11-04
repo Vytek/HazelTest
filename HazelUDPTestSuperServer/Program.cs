@@ -249,7 +249,7 @@ namespace HazelUDPTestSuperServer
                     {
                         //BROADCAST (SENDTOOTHER)
                         Console.WriteLine("BROADCAST (SENDTOOTHER)");
-                        //Cal Objects Table
+                        //Call Objects Table
                         var col = db.GetCollection<Objects>("objects");
                         //Parser Message
                         //Remove first byte (type)
@@ -370,7 +370,7 @@ namespace HazelUDPTestSuperServer
                                         //Parse HMessageReceived
                                         string[] words = HMessageReceived.Answer.Split(';');
                                         //words[0] = Login; words[1] = Password
-                                        if (col.Count(Query.EQ("UserName", words[0]))==1)
+                                        if (col.Count(Query.EQ("UserName", words[0])) == 1)
                                         {
                                             var results = col.Find(Query.EQ("UserName", words[0]));
                                             string UserPasswordRecord = string.Empty;
@@ -427,6 +427,41 @@ namespace HazelUDPTestSuperServer
                         }
                         Console.WriteLine("Send to: " + item.ClientConnected.EndPoint.ToString());
                         //HERE SEND TO ALL CLIENTS OBJECTS DB
+                        //TODO: Add code to send all clients
+                        //Call Objects Table
+                        var col_objects = db.GetCollection<Objects>("objects");
+                        //Recovers all objects in the table
+                        var results_objects = col_objects.Find(Query.GT("_id", 0));
+                        //Foreach send them to the client connected
+                        foreach (var o in results_objects)
+                        {
+                            //Create flatbuffer class
+                            FlatBufferBuilder fbb_object = new FlatBufferBuilder(1);
+
+                            StringOffset SOUIDBuffer_object = fbb_object.CreateString(o.UID);
+
+                            HazelTest.Object.StartObject(fbb_object);
+                            HazelTest.Object.AddType(fbb_object, (sbyte)PacketId.OBJECT_MOVE);
+                            HazelTest.Object.AddOwner(fbb_object, SOUIDBuffer_object);
+                            HazelTest.Object.AddIsKine(fbb_object, o.isKine);
+                            HazelTest.Object.AddID(fbb_object, o.ID);
+                            HazelTest.Object.AddPos(fbb_object, Vec3.CreateVec3(fbb_object, o.PosX, o.PosY, o.PosZ));
+                            HazelTest.Object.AddRot(fbb_object, Vec4.CreateVec4(fbb_object, o.RotX, o.RotY, o.RotZ, o.RotW));
+                            var offset_object = HazelTest.Object.EndObject(fbb);
+
+                            HazelTest.Object.FinishObjectBuffer(fbb_object, offset_object);
+                            //SendMessage
+                            using (var ms = new MemoryStream(fbb_object.DataBuffer.Data, fbb_object.DataBuffer.Position, fbb_object.Offset))
+                            {
+                                //Add type!
+                                //https://stackoverflow.com/questions/5591329/c-sharp-how-to-add-byte-to-byte-array
+                                byte[] newArray = new byte[ms.ToArray().Length + 1];
+                                ms.ToArray().CopyTo(newArray, 1);
+                                newArray[0] = (byte)SendType.SENDTOSERVER;
+                                item.ClientConnected.SendBytes(newArray, item.SOClientConnected);
+                            }
+                            Console.WriteLine("Send MOVE_OBJECT to: " + item.ClientConnected.EndPoint.ToString());
+                        }
                     }
                 }
             }
