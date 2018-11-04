@@ -438,7 +438,7 @@ namespace HazelUDPTestSuperServer
                             //Create flatbuffer class
                             FlatBufferBuilder fbb_object = new FlatBufferBuilder(1);
 
-                            StringOffset SOUIDBuffer_object = fbb_object.CreateString(o.UID);
+                            StringOffset SOUIDBuffer_object = fbb_object.CreateString(o.UID.Split(';')[1]+";"+ o.UID.Split(';')[2]);
 
                             HazelTest.Object.StartObject(fbb_object);
                             HazelTest.Object.AddType(fbb_object, (sbyte)PacketId.OBJECT_MOVE);
@@ -447,7 +447,7 @@ namespace HazelUDPTestSuperServer
                             HazelTest.Object.AddID(fbb_object, o.ID);
                             HazelTest.Object.AddPos(fbb_object, Vec3.CreateVec3(fbb_object, o.PosX, o.PosY, o.PosZ));
                             HazelTest.Object.AddRot(fbb_object, Vec4.CreateVec4(fbb_object, o.RotX, o.RotY, o.RotZ, o.RotW));
-                            var offset_object = HazelTest.Object.EndObject(fbb);
+                            var offset_object = HazelTest.Object.EndObject(fbb_object);
 
                             HazelTest.Object.FinishObjectBuffer(fbb_object, offset_object);
                             //SendMessage
@@ -457,9 +457,7 @@ namespace HazelUDPTestSuperServer
                                 //https://stackoverflow.com/questions/5591329/c-sharp-how-to-add-byte-to-byte-array
                                 byte[] newArray = new byte[ms.ToArray().Length + 1];
                                 ms.ToArray().CopyTo(newArray, 1);
-                                newArray[0] = (byte)SendType.SENDTOSERVER;
-                                item.ClientConnected.SendBytes(newArray, item.SOClientConnected);
-                            }
+                                newArray[0] = (byte)SendType.SENDTOOTHER;
                             Console.WriteLine("Send MOVE_OBJECT to: " + item.ClientConnected.EndPoint.ToString());
                         }
                     }
