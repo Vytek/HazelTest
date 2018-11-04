@@ -458,6 +458,8 @@ namespace HazelUDPTestSuperServer
                                 byte[] newArray = new byte[ms.ToArray().Length + 1];
                                 ms.ToArray().CopyTo(newArray, 1);
                                 newArray[0] = (byte)SendType.SENDTOOTHER;
+                                item.ClientConnected.SendBytes(newArray, item.SOClientConnected);
+                            }
                             Console.WriteLine("Send MOVE_OBJECT to: " + item.ClientConnected.EndPoint.ToString());
                         }
                     }
