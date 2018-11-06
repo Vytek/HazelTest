@@ -447,6 +447,7 @@ namespace HazelUDPTestClient
             //Insert login and password
             string UIDBuffer = AvatarName + ";" + AvatarPassword;
             Console.WriteLine("AvatarName: " + UIDBuffer.Split(';')[0]);
+            Console.WriteLine("AvatarPassword: " + UIDBuffer.Split(';')[1]);
             //https://stackoverflow.com/questions/2235683/easiest-way-to-parse-a-comma-delimited-string-to-some-kind-of-object-i-can-loop
             //StringOffset SOUIDBuffer = fbb.CreateString(String.Empty);
             StringOffset SOUIDBuffer = fbb.CreateString(UIDBuffer);
