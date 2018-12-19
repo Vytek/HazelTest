@@ -21,10 +21,10 @@ using System.Diagnostics;
 namespace HazelUDPTestSuperServer
 {
     public class Server
-	{
+    {
         public int portNumber = 4296;
         public static bool DEBUG = true;
-		public bool Running { get; private set; }
+        public bool Running { get; private set; }
 
         /// <summary>
         /// Users class.
@@ -58,13 +58,13 @@ namespace HazelUDPTestSuperServer
         /// <summary>
         /// Send type.
         /// </summary>
-        public enum SendType: byte
-		{
-			SENDTOALL = 0,
-			SENDTOOTHER = 1,
-			SENDTOSERVER = 2,
+        public enum SendType : byte
+        {
+            SENDTOALL = 0,
+            SENDTOOTHER = 1,
+            SENDTOSERVER = 2,
             SENDTOUID = 3 //NOT IMPLEMENTED
-		}
+        }
 
         /// <summary>
         /// Packet identifier.
@@ -84,29 +84,29 @@ namespace HazelUDPTestSuperServer
         /// Command type.
         /// </summary>
 		public enum CommandType : sbyte
-		{
-			LOGIN = 0,
+        {
+            LOGIN = 0,
             DISCONNECTEDCLIENT = 1
-		}
+        }
 
         /// <summary>
         /// Client message received.
         /// </summary>
 		public struct ClientMessageReceived
-		{
+        {
             public byte[] MessageBytes;
             public Connection ClientConnected;
             public Hazel.SendOption SOClientConnected;
-		};
+        };
 
         //List<Connection> clients = new List<Connection>();
-		//https://stackoverflow.com/questions/8629285/how-to-create-a-collection-like-liststring-object
-		static List<KeyValuePair<String, Connection>> clients = new List<KeyValuePair<String, Connection>>();
+        //https://stackoverflow.com/questions/8629285/how-to-create-a-collection-like-liststring-object
+        static List<KeyValuePair<String, Connection>> clients = new List<KeyValuePair<String, Connection>>();
         //Queue Messages
         static ConcurrentQueue<ClientMessageReceived> QueueMessages = new ConcurrentQueue<ClientMessageReceived>();
 
         static ManualResetEvent _quitEvent = new ManualResetEvent(false);
-        
+
         //LiteDB connection
         static LiteDatabase db = new LiteDatabase(Path.Combine(AssemblyDirectory, @"UsersObjects.db"));
 
@@ -114,12 +114,13 @@ namespace HazelUDPTestSuperServer
         /// Start this instance.
         /// </summary>
 		public void Start()
-		{
+        {
             //https://stackoverflow.com/questions/2586612/how-to-keep-a-net-console-app-running
-            Console.CancelKeyPress += (sender, eArgs) => {
-				_quitEvent.Set();
-				eArgs.Cancel = true;
-			};
+            Console.CancelKeyPress += (sender, eArgs) =>
+            {
+                _quitEvent.Set();
+                eArgs.Cancel = true;
+            };
 
             //Connect and create users collection for LiteDB.org
             //Get users collection
@@ -147,29 +148,29 @@ namespace HazelUDPTestSuperServer
                 // Insert new customer document (Id will be auto-incremented)
                 col.Insert(user);
             }
-           
+
             NetworkEndPoint endPoint = new NetworkEndPoint(IPAddress.Any, portNumber);
-			ConnectionListener listener = new UdpConnectionListener(endPoint);
+            ConnectionListener listener = new UdpConnectionListener(endPoint);
 
-			Running = true;
+            Running = true;
 
-			Console.WriteLine("Starting server!");
+            Console.WriteLine("Starting server!");
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             string version = fvi.FileVersion;
             Console.WriteLine("Server Version: " + version);
             Console.WriteLine("BD file path: " + Path.Combine(AssemblyDirectory, @"UsersObjects.db"));
-			Console.WriteLine("Server listening on " + (listener as UdpConnectionListener).EndPoint);
-			listener.NewConnection += NewConnectionHandler;
-			listener.Start();
+            Console.WriteLine("Server listening on " + (listener as UdpConnectionListener).EndPoint);
+            listener.NewConnection += NewConnectionHandler;
+            listener.Start();
 
-			_quitEvent.WaitOne();
+            _quitEvent.WaitOne();
 
-			//Close all
-			listener.Close();
-			//Exit 0
-			Environment.Exit(0);
-		}
+            //Close all
+            listener.Close();
+            //Exit 0
+            Environment.Exit(0);
+        }
 
         /// <summary>
         /// News the connection handler.
@@ -177,16 +178,16 @@ namespace HazelUDPTestSuperServer
         /// <param name="sender">Sender.</param>
         /// <param name="args">Arguments.</param>
 		private void NewConnectionHandler(object sender, NewConnectionEventArgs args)
-		{
+        {
             string UID = RandomIdGenerator.GetBase62(6);
             Console.WriteLine("UID Created: " + UID);
             //https://www.dotnetperls.com/keyvaluepair
             clients.Add(new KeyValuePair<string, Connection>(UID, args.Connection));
-            Console.WriteLine("New connection from " + args.Connection.EndPoint.ToString() + " with UID: "+ UID);
+            Console.WriteLine("New connection from " + args.Connection.EndPoint.ToString() + " with UID: " + UID);
             args.Connection.DataReceived += this.DataReceivedHandler;
-			args.Connection.Disconnected += this.ClientDisconnectHandler;
-			args.Recycle();
-		}
+            args.Connection.Disconnected += this.ClientDisconnectHandler;
+            args.Recycle();
+        }
 
         /// <summary>
         /// Datas the received handler.
@@ -194,14 +195,14 @@ namespace HazelUDPTestSuperServer
         /// <param name="sender">Sender.</param>
         /// <param name="args">Arguments.</param>
         private void DataReceivedHandler(object sender, Hazel.DataReceivedEventArgs args)
-		{
-			Connection connection = (Connection)sender;
-			Console.WriteLine("Received (" + string.Join<byte>(", ", args.Bytes) + ") from " + connection.EndPoint.ToString());
+        {
+            Connection connection = (Connection)sender;
+            Console.WriteLine("Received (" + string.Join<byte>(", ", args.Bytes) + ") from " + connection.EndPoint.ToString());
             Console.WriteLine("SendType: " + args.Bytes.GetValue(0).ToString());
-			//Console.WriteLine(((byte)SendType.SENDTOALL).ToString());
+            //Console.WriteLine(((byte)SendType.SENDTOALL).ToString());
 
-			//Create Struct ClientMessageReceived
-			ClientMessageReceived NewClientConnected;
+            //Create Struct ClientMessageReceived
+            ClientMessageReceived NewClientConnected;
             NewClientConnected.ClientConnected = connection;
             NewClientConnected.MessageBytes = args.Bytes;
             NewClientConnected.SOClientConnected = args.SendOption;
@@ -210,7 +211,7 @@ namespace HazelUDPTestSuperServer
             QueueMessages.Enqueue(NewClientConnected);
             ThreadPool.QueueUserWorkItem(Server.ConsumerThread);
             args.Recycle();
-		}
+        }
 
         /// <summary>
         /// Consumers the thread.
@@ -438,7 +439,7 @@ namespace HazelUDPTestSuperServer
                             //Create flatbuffer class
                             FlatBufferBuilder fbb_object = new FlatBufferBuilder(1);
 
-                            StringOffset SOUIDBuffer_object = fbb_object.CreateString(o.UID.Split(';')[1]+";"+ o.UID.Split(';')[2]);
+                            StringOffset SOUIDBuffer_object = fbb_object.CreateString(o.UID.Split(';')[1] + ";" + o.UID.Split(';')[2]);
 
                             HazelTest.Object.StartObject(fbb_object);
                             HazelTest.Object.AddType(fbb_object, (sbyte)PacketId.OBJECT_MOVE);
@@ -473,53 +474,53 @@ namespace HazelUDPTestSuperServer
         /// <param name="sender">Sender.</param>
         /// <param name="args">Arguments.</param>
 		private void ClientDisconnectHandler(object sender, DisconnectedEventArgs args)
-		{
-			Connection connection = (Connection)sender;
-			Console.WriteLine("Connection from " + connection.EndPoint + " lost");
+        {
+            Connection connection = (Connection)sender;
+            Console.WriteLine("Connection from " + connection.EndPoint + " lost");
             String UIDBuffer = String.Empty;
-			//Cerca e restituisci il tutto
-			foreach (var conn in clients)
-			{
-				if (conn.Value == connection) //SENDTOSERVER
-				{
+            //Cerca e restituisci il tutto
+            foreach (var conn in clients)
+            {
+                if (conn.Value == connection) //SENDTOSERVER
+                {
                     UIDBuffer = conn.Key;
-					Console.WriteLine("UID TO DESTROY: " + UIDBuffer);
-				}
+                    Console.WriteLine("UID TO DESTROY: " + UIDBuffer);
+                }
 
-			}
+            }
 
-			//https://stackoverflow.com/posts/1608949/revisions //Debug
+            //https://stackoverflow.com/posts/1608949/revisions //Debug
             //Delete client disconnected
-			clients.RemoveAll(item => item.Value.Equals(connection));
+            clients.RemoveAll(item => item.Value.Equals(connection));
 
-			//Encode FlatBuffer
-			//Create flatbuffer class
-			FlatBufferBuilder fbb = new FlatBufferBuilder(1);
+            //Encode FlatBuffer
+            //Create flatbuffer class
+            FlatBufferBuilder fbb = new FlatBufferBuilder(1);
 
-			StringOffset SOUIDBuffer = fbb.CreateString(UIDBuffer);
+            StringOffset SOUIDBuffer = fbb.CreateString(UIDBuffer);
 
-			HazelMessage.HMessage.StartHMessage(fbb);
-			HazelMessage.HMessage.AddCommand(fbb, (sbyte)CommandType.DISCONNECTEDCLIENT);
-			HazelMessage.HMessage.AddAnswer(fbb, SOUIDBuffer);
-			var offset = HazelMessage.HMessage.EndHMessage(fbb);
-			HazelMessage.HMessage.FinishHMessageBuffer(fbb, offset);
-			//Reply to all Client
-			using (var ms = new MemoryStream(fbb.DataBuffer.Data, fbb.DataBuffer.Position, fbb.Offset))
-			{
-				//Add type!
-				//https://stackoverflow.com/questions/5591329/c-sharp-how-to-add-byte-to-byte-array
-				byte[] newArray = new byte[ms.ToArray().Length + 1];
-				ms.ToArray().CopyTo(newArray, 1);
-				newArray[0] = (byte)SendType.SENDTOSERVER;
-				foreach (var conn in clients)
-				{
+            HazelMessage.HMessage.StartHMessage(fbb);
+            HazelMessage.HMessage.AddCommand(fbb, (sbyte)CommandType.DISCONNECTEDCLIENT);
+            HazelMessage.HMessage.AddAnswer(fbb, SOUIDBuffer);
+            var offset = HazelMessage.HMessage.EndHMessage(fbb);
+            HazelMessage.HMessage.FinishHMessageBuffer(fbb, offset);
+            //Reply to all Client
+            using (var ms = new MemoryStream(fbb.DataBuffer.Data, fbb.DataBuffer.Position, fbb.Offset))
+            {
+                //Add type!
+                //https://stackoverflow.com/questions/5591329/c-sharp-how-to-add-byte-to-byte-array
+                byte[] newArray = new byte[ms.ToArray().Length + 1];
+                ms.ToArray().CopyTo(newArray, 1);
+                newArray[0] = (byte)SendType.SENDTOSERVER;
+                foreach (var conn in clients)
+                {
                     conn.Value.SendBytes(newArray, SendOption.Reliable);
-					Console.WriteLine("Send to: " + conn.Value.EndPoint.ToString());
-				}
-			}
-			args.Recycle();
+                    Console.WriteLine("Send to: " + conn.Value.EndPoint.ToString());
+                }
+            }
+            args.Recycle();
         }
-        
+
         /// <summary>
         /// Return path of main assembly
         /// </summary>
@@ -538,13 +539,13 @@ namespace HazelUDPTestSuperServer
         /// Shutdown this instance.
         /// </summary>
 		public void Shutdown()
-		{
-			if (Running)
-			{
-				Running = false;
-				Console.WriteLine("Shutting down the Hazel Server...");
-			}
-		}
+        {
+            if (Running)
+            {
+                Running = false;
+                Console.WriteLine("Shutting down the Hazel Server...");
+            }
+        }
 
         //https://stackoverflow.com/posts/9543797/revisions
         //https://stackoverflow.com/questions/9543715/generating-human-readable-usable-short-but-unique-ids?answertab=votes#tab-top
@@ -584,13 +585,13 @@ namespace HazelUDPTestSuperServer
         /// Main class.
         /// </summary>
         class MainClass
-		{
-			public static void Main(string[] args)
-			{
+        {
+            public static void Main(string[] args)
+            {
                 ThreadPool.QueueUserWorkItem(Server.ConsumerThread);
                 Server ServerHazel = new Server();
-				ServerHazel.Start();
-			}
-		}
-	}
+                ServerHazel.Start();
+            }
+        }
+    }
 }

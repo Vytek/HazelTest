@@ -48,6 +48,7 @@
     <Reference Include="INIFileParser">
       <HintPath>..\packages\ini-parser.3.4.0\lib\net20\INIFileParser.dll</HintPath>
     </Reference>
+    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -61,6 +62,18 @@
     <Compile Include="Geometry\Vector4.cs" />
     <Compile Include="FlatBufferSchema\SaveSchemaHazel.cs" />
     <Compile Include="FlatBufferSchema\SaveSchemaHazelMessage.cs" />
+    <Compile Include="NestStack\NetStack.Buffers\ArrayPool.cs" />
+    <Compile Include="NestStack\NetStack.Buffers\ArrayPoolEventSource.cs" />
+    <Compile Include="NestStack\NetStack.Buffers\DefaultArrayPool.cs" />
+    <Compile Include="NestStack\NetStack.Buffers\DefaultArrayPoolBucket.cs" />
+    <Compile Include="NestStack\NetStack.Buffers\Utilities.cs" />
+    <Compile Include="NestStack\NetStack.Compression\BoundedRange.cs" />
+    <Compile Include="NestStack\NetStack.Compression\HalfPrecision.cs" />
+    <Compile Include="NestStack\NetStack.Compression\SmallestThree.cs" />
+    <Compile Include="NestStack\NetStack.Serialization\BitBuffer.cs" />
+    <Compile Include="NestStack\NetStack.Threading\ConcurrentBuffer.cs" />
+    <Compile Include="NestStack\NetStack.Threading\ConcurrentPool.cs" />
+    <Compile Include="NestStack\NetStack.Unsafe\Memory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DocInclude\common.xml" />
@@ -69,6 +82,7 @@
   <ItemGroup>
     <Folder Include="Geometry\" />
     <Folder Include="FlatBufferSchema\" />
+    <Folder Include="NestStack\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

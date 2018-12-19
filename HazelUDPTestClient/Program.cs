@@ -87,7 +87,7 @@ namespace HazelUDPTestClient
             //https://www.cambiaresearch.com/articles/68/convert-string-to-int-in-csharp
             ServerPort = System.Convert.ToInt32(parsedData["ServerConfig"]["ServerPort"]);
 
-            Console.WriteLine("ServerIP: "+ parsedData["ServerConfig"]["ServerIP"]);
+            Console.WriteLine("ServerIP: " + parsedData["ServerConfig"]["ServerIP"]);
             Console.WriteLine("ServerPort: " + parsedData["ServerConfig"]["ServerPort"]);
 
             NetworkEndPoint endPoint = new NetworkEndPoint(ServerIP, ServerPort, IPMode.IPv4);
@@ -127,7 +127,8 @@ namespace HazelUDPTestClient
                     if ((cki.Modifiers & ConsoleModifiers.Shift) != 0) Console.Write("SHIFT+");
                     if ((cki.Modifiers & ConsoleModifiers.Control) != 0) Console.Write("CTL+");
                     Console.WriteLine(cki.Key.ToString());
-                    if (cki.Key.ToString().ToLower() == "r") {
+                    if (cki.Key.ToString().ToLower() == "r")
+                    {
                         //https://gateway.ipfs.io/ipfs/QmerSDvd9PTgcbTAz68rL1ujeCZakhdLeAUpdcfdkyhqyx
                         RezObject("QmerSDvd9PTgcbTAz68rL1ujeCZakhdLeAUpdcfdkyhqyx", UID, true);
                     }
@@ -269,7 +270,7 @@ namespace HazelUDPTestClient
         /// <param name="Request">If set to <c>true</c> request.</param>
         private static void RezObject(String ObjectHASHIPFS, String vUID, Boolean Request)
         {
-            Console.WriteLine("IPFS Object hash: "+ObjectHASHIPFS);
+            Console.WriteLine("IPFS Object hash: " + ObjectHASHIPFS);
             var client = new RestClient();
             client.BaseUrl = new Uri("http://localhost:5001/api/");
             var request = new RestRequest("v0/id", Method.GET);
@@ -277,16 +278,18 @@ namespace HazelUDPTestClient
             //request.AddUrlSegment("id", "1"); // replaces matching token in request.Resource
             // execute the request
             IRestResponse response = client.Execute(request);
-            if (!String.IsNullOrEmpty(response.Content)) {
+            if (!String.IsNullOrEmpty(response.Content))
+            {
                 var content = response.Content; // raw content as string
                 var contenttype = response.ContentType;
                 Console.WriteLine(content);
                 Console.WriteLine(contenttype);
                 //Request file from IPFS
-                var request_ipfs = new RestRequest("v0/cat?arg="+ObjectHASHIPFS, Method.GET);
+                var request_ipfs = new RestRequest("v0/cat?arg=" + ObjectHASHIPFS, Method.GET);
                 IRestResponse response_ipfs = client.Execute(request_ipfs);
                 //Instance it in Unity3D Engine
-                if (!String.IsNullOrEmpty(response_ipfs.Content)) {
+                if (!String.IsNullOrEmpty(response_ipfs.Content))
+                {
                     var content_ipfs = response_ipfs.Content; // raw content as string
                     var contenttype_ipfs = response_ipfs.ContentType;
                     Console.WriteLine(content_ipfs);
@@ -302,10 +305,14 @@ namespace HazelUDPTestClient
                         //Send command to rez in others clients
                         SendMessage(SendType.SENDTOOTHER, PacketId.OBJECT_SPAWN, UIDObject, AvatarName + ";" + ObjectHASHIPFS, true, lastPosition, lastRotation);
                     }
-                } else {
-                    Console.WriteLine("ERROR: IPFS hash NOT correct or other problem!");  
-                }                    
-            } else {
+                }
+                else
+                {
+                    Console.WriteLine("ERROR: IPFS hash NOT correct or other problem!");
+                }
+            }
+            else
+            {
                 Console.WriteLine("ERROR: IPFS is NOT active!");
             }
 
@@ -320,11 +327,11 @@ namespace HazelUDPTestClient
         {
             if (DictObjects.Count != 0)
             {
-                if (DictObjects.Contains(new KeyValuePair<int, string>(UIDObject, AvatarName+";"+ObjectHASHIPFS)))
+                if (DictObjects.Contains(new KeyValuePair<int, string>(UIDObject, AvatarName + ";" + ObjectHASHIPFS)))
                 {
-                    Console.WriteLine("UID: "+vUID.ToString());
+                    Console.WriteLine("UID: " + vUID.ToString());
                     Console.WriteLine("UIDOject: " + UIDObject.ToString());
-                    Console.WriteLine("HASHIPFS: "+ObjectHASHIPFS);
+                    Console.WriteLine("HASHIPFS: " + ObjectHASHIPFS);
                     //Remove Object/Remove GameObject
                     DictObjects.Remove(UIDObject);
                     if (Request)
@@ -411,7 +418,9 @@ namespace HazelUDPTestClient
             if (DEBUG)
             {
                 Console.WriteLine("ID SENT: " + IDObject.ToString());
+                Console.WriteLine("TYPE SENT: " + TypeBuffer.ToString());
                 Console.WriteLine("UID SENT: " + OwnerPlayer);
+                Console.WriteLine("IsKINE SENT: " + isKine.ToString());
                 Console.WriteLine("POS SENT: " + Pos.X.ToString() + ", " + Pos.Y.ToString() + ", " + Pos.Z.ToString());
                 Console.WriteLine("ROT SENT: " + Rot.X.ToString() + ", " + Rot.Y.ToString() + ", " + Rot.Z.ToString() + ", " + Rot.W.ToString());
             }
@@ -429,9 +438,12 @@ namespace HazelUDPTestClient
                 connection.SendBytes(newArray, SendOption.None); //WARNING: ALL MESSAGES ARE NOT RELIABLE!
                 if (DEBUG)
                 {
+                    Console.WriteLine("Data Lenghts: " + newArray.Length.ToString());
                     Console.WriteLine("Message sent!");
                 }
             }
+
+            //Add example in NetStack
         }
 
         /// <summary>
@@ -466,10 +478,11 @@ namespace HazelUDPTestClient
                 ms.ToArray().CopyTo(newArray, 1);
                 newArray[0] = (byte)SendType.SENDTOSERVER;
                 connection.SendBytes(newArray, SendOption.Reliable);
-            }
-            if (DEBUG)
-            {
-                Console.WriteLine("Message sent!");
+                if (DEBUG)
+                {
+                    Console.WriteLine("Data Lenghts: " + newArray.Length.ToString());
+                    Console.WriteLine("Message sent!");
+                }
             }
         }
     }
