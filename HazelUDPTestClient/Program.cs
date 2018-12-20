@@ -18,6 +18,9 @@ using System.IO;
 using IniParser;
 using IniParser.Model;
 
+using NetStack.Compression;
+using NetStack.Serialization;
+
 namespace HazelUDPTestClient
 {
     class ClientExample
@@ -444,6 +447,73 @@ namespace HazelUDPTestClient
             }
 
             //Add example in NetStack
+            // Create a new BoundedRange array for Vector3 position, each entry has bounds and precision
+            BoundedRange[] worldBounds = new BoundedRange[3];
+
+            worldBounds[0] = new BoundedRange(-50f, 50f, 0.05f); // X axis
+            worldBounds[1] = new BoundedRange(0f, 25f, 0.05f); // Y axis
+            worldBounds[2] = new BoundedRange(-50f, 50f, 0.05f); // Z axis
+
+            //Convert from HazelUDPTestClient.Vector3 at System.Numerics.Vector3
+            System.Numerics.Vector3 InternalPos = new System.Numerics.Vector3(Pos.X, Pos.Y, Pos.Z);
+            //Compress position data
+            CompressedVector3 compressedPosition = BoundedRange.Compress(InternalPos, worldBounds);
+
+            // Read compressed data
+            Console.WriteLine("Compressed position - X: " + compressedPosition.x + ", Y:" + compressedPosition.y + ", Z:" + compressedPosition.z);
+
+            //Convert from HazelUDPTestClient.Quaternion at System.Numerics.Quaternion
+            System.Numerics.Quaternion InternalRot = new System.Numerics.Quaternion(Rot.X, Rot.Y, Rot.Z, Rot.W);
+            // Compress rotation data
+            CompressedQuaternion compressedRotation = SmallestThree.Compress(InternalRot);
+
+            // Read compressed data
+            Console.WriteLine("Compressed rotation - M: " + compressedRotation.m + ", A:" + compressedRotation.a + ", B:" + compressedRotation.b + ", C:" + compressedRotation.c);
+
+            // Create a new bit buffer with 128 chunks
+            BitBuffer data = new BitBuffer(128);
+
+            data.AddByte((byte)TypeBuffer)
+                .AddString(OwnerPlayer)
+                .AddBool(isKine)
+                .AddUInt(IDObject)
+                .AddUInt(compressedPosition.x)
+                .AddUInt(compressedPosition.y)
+                .AddUInt(compressedPosition.z)
+                .AddByte(compressedRotation.m)
+                .AddInt(compressedRotation.a)
+                .AddInt(compressedRotation.b)
+                .AddInt(compressedRotation.c);
+
+            Console.WriteLine("BitBuffer: " + data.Length.ToString());
+
+            //byte[] BufferNetStack = new byte[data.Length+1];
+            byte[] BufferNetStack = new byte[data.Length + 3];
+
+            data.ToArray(BufferNetStack);
+
+            if (DEBUG)
+            {
+                Console.WriteLine("Data Lenghts NetStack: " + BufferNetStack.Length.ToString());
+                PrintByteArray(BufferNetStack);
+                Console.WriteLine("Message sent!");
+            }
+        }
+
+        //https://stackoverflow.com/questions/10940883/c-converting-byte-array-to-string-and-printing-out-to-console
+        /// <summary>
+        /// Prints the byte array.
+        /// </summary>
+        /// <param name="bytes">Bytes.</param>
+        public static void PrintByteArray(byte[] bytes)
+        {
+            var sb = new StringBuilder("new byte[] { ");
+            foreach (var b in bytes)
+            {
+                sb.Append(b + ", ");
+            }
+            sb.Append("}");
+            Console.WriteLine(sb.ToString());
         }
 
         /// <summary>
