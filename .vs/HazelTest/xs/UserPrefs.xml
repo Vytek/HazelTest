@@ -1,20 +1,16 @@
-﻿<Properties StartupConfiguration="{6E2D1F72-724C-437E-BED5-A5E3F23D8239}|Default">
-  <MonoDevelop.Ide.ItemProperties.HazelTestClient PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="HazelUDPTestSuperServer/Program.cs">
+﻿<Properties StartupConfiguration="{6E2D1F72-724C-437E-BED5-A5E3F23D8239}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
+  <MonoDevelop.Ide.Workbench ActiveDocument="HazelUDPTestClientNetStack/Program.cs">
     <Files>
-      <File FileName="HazelUDPTestSuperServer/Program.cs" Line="156" Column="100" />
       <File FileName="HazelUDPTestClient/Program.cs" Line="45" Column="10" />
-      <File FileName="HazelUDPTestClient/FlatBufferSchema/SaveSchemaHazel.cs" Line="1" Column="1" />
-      <File FileName="HazelUDPTestClient/FlatBufferSchema/SaveSchemaHazelMessage.cs" Line="1" Column="1" />
-      <File FileName="HazelTestSuperServer/Program.cs" Line="14" Column="21" />
-      <File FileName="HazelTestSuperServer/Log.cs" Line="1" Column="54" />
+      <File FileName="HazelUDPTestClientNetStack/Program.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
-  <MonoDevelop.Ide.ItemProperties.HazelUDPTestSuperServer PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.ItemProperties.HazelTestClient PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.ItemProperties.HazelUDPTestSuperServer PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MultiItemStartupConfigurations />
 </Properties>
